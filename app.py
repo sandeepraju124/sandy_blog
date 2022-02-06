@@ -15,6 +15,10 @@ def courses():
     return "Courses listed " \
            "under practice subdomain."
 
+@app.route('/test')
+def test():
+    return "this is testing"
+
 if __name__ == '__main__':
     # website_url = 'vibhu.gfg:5000'
     # app.config['SERVER_NAME'] = website_url
