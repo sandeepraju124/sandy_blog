@@ -37,6 +37,7 @@ def home():
         # print(age)
         print(data)
         print('hit')
+
         # collecteddata = json.load(data)
         # collection.insert_one(content)
         collection.insert_one({"email":data})
@@ -44,7 +45,17 @@ def home():
     return render_template('index.html')
 
 
+@app.route('/layer1',methods=['GET','POST'])
+def layer1():
+    data =db.layer1.find()
+    print(data)
+    # jsondata = jsonify([todo for todo in data])
+    # print(jsondata)
+    for i in data:
+        print(i)
 
+
+    return 'layer1'
 
 
 @app.route('/api/', subdomain ='api')
