@@ -35,9 +35,12 @@ def home():
         # print(content)
         # print(name)
         # print(age)
-        print(data)
-        print('hit')
-
+# # <<<<<<< sandy_br
+# #         print(data)
+# #         print('hit')
+#         # print(data)
+#         # print('hit')
+# >>>>>>> master
         # collecteddata = json.load(data)
         # collection.insert_one(content)
         collection.insert_one({"email":data})
@@ -93,7 +96,7 @@ def insert():
         # print(content)
         # print(name)
         # print(age)
-        print(data)
+        # print(data)
         # collecteddata = json.load(data)
         # collection.insert_one(content)
         return "inserted data"
