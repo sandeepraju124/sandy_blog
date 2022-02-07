@@ -1,4 +1,4 @@
-from flask import Flask,render_template,url_for,request,redirect,flash
+from flask import Flask,render_template,url_for,request,redirect,flash,Response
 import json
 import pymongo
 from bson import json_util, ObjectId
@@ -47,15 +47,27 @@ def home():
 
 @app.route('/layer1',methods=['GET','POST'])
 def layer1():
-    data =db.layer1.find()
-    print(data)
+    data = list(db.layer1.find())
+    # print(data)
+    response = []
     # jsondata = jsonify([todo for todo in data])
     # print(jsondata)
     for i in data:
-        print(i)
+        # print(i)
+
+    # print(response)
+        i['_id'] = str(i['_id'])
+        response.append(i)
+    print(response)
+    return Response(mimetype="application/json",
+        response=json.dumps({"data":data})
+
+    )
+    # return jsonify({response})
+        
 
 
-    return 'layer1'
+    # return 'layer1'
 
 
 @app.route('/api/', subdomain ='api')
