@@ -4,7 +4,8 @@ import pymongo
 from flask import Flask
 from flask import render_template, request, Response
 
-client = pymongo.MongoClient("mongodb://127.0.0.1:27017/")
+# client = pymongo.MongoClient("mongodb://127.0.0.1:27017/")
+client = pymongo.MongoClient("mongodb://mongodb-flask:BvFOOXd0cOoU9vETxCZsDbaPrwrfcoraV3fTkNoWueaFpD4amKvIsM8Gu42hcviJ2Xfz3qfOShu84hxoVgL5iA==@mongodb-flask.mongo.cosmos.azure.com:10255/?ssl=true&retrywrites=false&replicaSet=globaldb&maxIdleTimeMS=120000&appName=@mongodb-flask@")
 db = client['sandeep']
 app = Flask(__name__)
 # db = client['sandeep']
