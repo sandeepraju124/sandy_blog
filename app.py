@@ -30,47 +30,32 @@ def home():
     if request.method == 'POST':
         # content = request.get_json(force = True)
         data = request.form.get("email")
-        # name = content['name']
-        # age = content['age']
-        # print(content)
-        # print(name)
-        # print(age)
-# # <<<<<<< sandy_br
-# #         print(data)
-# #         print('hit')
-#         # print(data)
-#         # print('hit')
-# >>>>>>> master
-        # collecteddata = json.load(data)
-        # collection.insert_one(content)
-        collection.insert_one({"email":data})
-        return "inserted data"
+        try:
+            collection.insert_one({"email":data})
+            return "inserted data"
+        except Exception as e:
+            print(e)
     return render_template('index.html')
 
 
 @app.route('/layer1',methods=['GET','POST'])
 def layer1():
     data = list(db.layer1.find())
-    # print(data)
     response = []
-    # jsondata = jsonify([todo for todo in data])
-    # print(jsondata)
     for i in data:
-        # print(i)
 
-    # print(response)
         i['_id'] = str(i['_id'])
         response.append(i)
     print(response)
-    return Response(mimetype="application/json",
+    try:
+        return Response(mimetype="application/json",
         response=json.dumps({"data":data})
 
     )
-    # return jsonify({response})
-        
+    except Exception as e:
+        print(e)
 
 
-    # return 'layer1'
 
 
 @app.route('/api/', subdomain ='api')
@@ -89,20 +74,9 @@ def test():
 @app.route('/insertone',methods=['GET', 'POST'])
 def insert():
     if request.method == 'POST':
-        # content = request.get_json(force = True)
         data = request.form.get('email')
-        # name = content['name']
-        # age = content['age']
-        # print(content)
-        # print(name)
-        # print(age)
-        # print(data)
-        # collecteddata = json.load(data)
-        # collection.insert_one(content)
         return "inserted data"
 
     return 'data not get'
-if __name__ == '__main__':
-    # website_url = 'vibhu.gfg:5000'
-    # app.config['SERVER_NAME'] = website_url
+if __name__ == '__main__':cd cd
     app.run(debug=True)
