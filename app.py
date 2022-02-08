@@ -35,6 +35,7 @@ def home():
             return "inserted data"
         except Exception as e:
             print(e)
+            return (e)
     return render_template('index.html')
 
 
@@ -46,7 +47,7 @@ def layer1():
 
         i['_id'] = str(i['_id'])
         response.append(i)
-    print(response)
+    # print(response)
     try:
         return Response(mimetype="application/json",
         response=json.dumps({"data":data})
@@ -54,6 +55,7 @@ def layer1():
     )
     except Exception as e:
         print(e)
+        return (e)
 
 
 
@@ -78,5 +80,5 @@ def insert():
         return "inserted data"
 
     return 'data not get'
-if __name__ == '__main__':cd cd
+if __name__ == '__main__':
     app.run(debug=True)
