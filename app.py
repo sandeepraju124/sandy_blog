@@ -35,7 +35,7 @@ def home():
             collection.insert_one({"email": data})
             return "inserted data"
         except Exception as e:
-            print(e)
+            # print(e)
             return e
     return render_template('index.html')
 
@@ -53,7 +53,7 @@ def layer1():
 
                         )
     except Exception as e:
-        print(e)
+        # print(e)
         return e
 
 
@@ -80,4 +80,4 @@ def insert():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(port=80, debug=True)
