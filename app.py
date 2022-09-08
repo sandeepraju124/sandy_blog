@@ -1,13 +1,14 @@
 import pymongo
-from flask import Flask, jsonify
+from flask import Flask, json
 from flask import render_template, request, Response
+from bson.objectid import ObjectId
 
 client = pymongo.MongoClient("mongodb://127.0.0.1:27017/")
 # client = pymongo.MongoClient("mongodb://mongodb-flask:BvFOOXd0cOoU9vETxCZsDbaPrwrfcoraV3fTkNoWueaFpD4amKvIsM8Gu42hcviJ2Xfz3qfOShu84hxoVgL5iA==@mongodb-flask.mongo.cosmos.azure.com:10255/?ssl=true&retrywrites=false&replicaSet=globaldb&maxIdleTimeMS=120000&appName=@mongodb-flask@")
-db = client['sandeep']
+db = client['SSSv1']
 app = Flask(__name__)
 # db = client['sandeep']
-collection = db.employeeenformation
+collection = db.restaurant
 
 
 
@@ -26,68 +27,58 @@ def home():
 
 
 
-
-dict = [{
-"userId": 1,
-"id": 1,
-"title": "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
-"body": "quia et suscipit suscipit recusandae consequuntur expedita et cum reprehenderit molestiae ut ut quas totam nostrum rerum est autem sunt rem eveniet architecto"
-},
-{
-"userId": 1,
-"id": 2,
-"title": "qui est esse",
-"body": "est rerum tempore vitae sequi sint nihil reprehenderit dolor beatae ea dolores neque fugiat blanditiis voluptate porro vel nihil molestiae ut reiciendis qui aperiam non debitis possimus qui neque nisi nulla"
-},
-{
-"userId": 1,
-"id": 3,
-"title": "ea molestias quasi exercitationem repellat qui ipsa sit aut",
-"body": "et iusto sed quo iure voluptatem occaecati omnis eligendi aut ad voluptatem doloribus vel accusantium quis pariatur molestiae porro eius odio et labore et velit aut"
-},
-{
-"userId": 1,
-"id": 4,
-"title": "eum et est occaecati",
-"body": "ullam et saepe reiciendis voluptatem adipisci sit amet autem assumenda provident rerum culpa quis hic commodi nesciunt rem tenetur doloremque ipsam iure quis sunt voluptatem rerum illo velit"
-},
-{
-"userId": 1,
-"id": 5,
-"title": "nesciunt quas odio",
-"body": "repudiandae veniam quaerat sunt sed alias aut fugiat sit autem sed est voluptatem omnis possimus esse voluptatibus quis est aut tenetur dolor neque"
-},
-{
-"userId": 1,
-"id": 6,
-"title": "dolorem eum magni eos aperiam quia",
-"body": "ut aspernatur corporis harum nihil quis provident sequi mollitia nobis aliquid molestiae perspiciatis et ea nemo ab reprehenderit accusantium quas voluptate dolores velit et doloremque molestiae"
-},]
+##########      GET  all the users        #################
 
 
-@app.route('/test', methods=['GET', 'POST'])
+
+@app.route('/users',methods=["GET"])
+def users():
+    try:
+        data = list(collection.find())
+        for users in data:
+            users["_id"]= str(users["_id"])
+        return Response(response = json.dumps(data),status = 200,mimetype="application/json")
+    
+    except:
+        return Response(response = json.dumps({"message":"user not created"}),status = 200,mimetype="application/json")
+    
+
+##########      Post the users        #################
+
+@app.route('/test', methods=['POST'])
 def test():
-    return jsonify(dict)
+    if request.method == 'POST':
+        try:
+            name = request.form.get("name")
+            looks = request.form.get("looks")
+            response = collection.insert_one({"name":name,"looks":looks})
+            # response = collection.insert_one(dict)
+            print(response.inserted_id)
+            return Response(response = json.dumps({"message":"user created", "id": f"{response.inserted_id}"}),status = 200,mimetype="application/json")
+        except Exception as e:
+            print("hitted exemption {}".format(e))
+            return Response(response=json.dumps({"message":"user not created"}),status = 500,mimetype="application/json")
+        # return jsonify(dict)
+    
+    
+##########      patch the users        #################
 
+@app.route("/users/<id>",methods=["PATCH"])
+def usersPatch(id):
+    try:
+        data = collection.update_one(
+        {"_id":ObjectId(id)},
+        {"$set":{"name":request.form.get("name")}}
+        # {"$set":{"_id":request.form.get("id")}}
+        )
+        print("xnxnxnxnxnxnxnxnxnxnxnxnxnx")
+        print(request.form.get("name"))
+        return Response(response=json.dumps({"message":"user updated"}),status = 200,mimetype="application/json")
+    except Exception as ex:
+        print("KKKKKKKKKKKKKKKKKKKKKKKKKKK{}".format(ex))
+        return Response(response=json.dumps({"message":"sry cannot update user"}),status = 500,mimetype="application/json")
 
-# @app.route('/layer1', methods=['GET', 'POST'])
-# def layer1():
-#     try:
-#         data = list(db.layer1.find())
-#         response = []
-#         for i in data:
-#             i['_id'] = str(i['_id'])
-#             response.append(i)
-#         return Response(mimetype="application/json", status=500,
-#                         response=json.dumps({"data": data})
-#
-#                         )
-#     except Exception as e:
-#         # print(e)
-#         return e
-#
-
-
+# db.products.updateOne({_id: 1}, {$set: {price: 899}})
 
 if __name__ == '__main__':
     app.run(debug=True)
