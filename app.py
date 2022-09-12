@@ -49,15 +49,18 @@ def users():
 def test():
     if request.method == 'POST':
         try:
-            name = request.form.get("name")
-            looks = request.form.get("looks")
-            response = collection.insert_one({"name":name,"looks":looks})
-            # response = collection.insert_one(dict)
+            restaurant_name = request.form.get("restaurant_name")
+            dp_image = request.form.get("dp_image")
+            cover_image = request.form.get("cover_image")
+            contact_number = request.form.get("contact_number")
+            comments=request.form.getlist("comments")
+            print(comments)
+            response = collection.insert_one({"restaurant_name":restaurant_name,"dp_image":dp_image,"cover_image":cover_image,"contact_number":contact_number,"comments":comments})
             print(response.inserted_id)
-            return Response(response = json.dumps({"message":"user created", "id": f"{response.inserted_id}"}),status = 200,mimetype="application/json")
+            return Response(response = json.dumps({"message":"data send", "id": f"{response.inserted_id}"}),status = 200,mimetype="application/json")
         except Exception as e:
             print("hitted exemption {}".format(e))
-            return Response(response=json.dumps({"message":"user not created"}),status = 500,mimetype="application/json")
+            return Response(response=json.dumps({"message":"data not send"}),status = 500,mimetype="application/json")
         # return jsonify(dict)
     
     
@@ -68,17 +71,19 @@ def usersPatch(id):
     try:
         data = collection.update_one(
         {"_id":ObjectId(id)},
-        {"$set":{"name":request.form.get("name")}}
-        # {"$set":{"_id":request.form.get("id")}}
+        # {"$set":{"name":request.form.get("name")}}
+        {"$push":{"comments":request.form.get("comments")}}
         )
         print("xnxnxnxnxnxnxnxnxnxnxnxnxnx")
-        print(request.form.get("name"))
+        print(request.form.get("comments"))
         return Response(response=json.dumps({"message":"user updated"}),status = 200,mimetype="application/json")
     except Exception as ex:
         print("KKKKKKKKKKKKKKKKKKKKKKKKKKK{}".format(ex))
         return Response(response=json.dumps({"message":"sry cannot update user"}),status = 500,mimetype="application/json")
 
 # db.products.updateOne({_id: 1}, {$set: {price: 899}})
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
