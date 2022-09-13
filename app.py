@@ -3,8 +3,8 @@ from flask import Flask, json
 from flask import render_template, request, Response
 from bson.objectid import ObjectId
 
-client = pymongo.MongoClient("mongodb://127.0.0.1:27017/")
-# client = pymongo.MongoClient("mongodb://mongodb-flask:BvFOOXd0cOoU9vETxCZsDbaPrwrfcoraV3fTkNoWueaFpD4amKvIsM8Gu42hcviJ2Xfz3qfOShu84hxoVgL5iA==@mongodb-flask.mongo.cosmos.azure.com:10255/?ssl=true&retrywrites=false&replicaSet=globaldb&maxIdleTimeMS=120000&appName=@mongodb-flask@")
+# client = pymongo.MongoClient("mongodb://127.0.0.1:27017/")
+client = pymongo.MongoClient("mongodb://sandydb:7WV8hpWGNL9EtSzXhk38dZ4tE4wa40ShLkrqKiDqZzhBOqloIrNvFji5UzJ9UgIQSpou5mPyzoy0QOWQYgvQmQ==@sandydb.mongo.cosmos.azure.com:10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@sandydb@")
 db = client['SSSv1']
 app = Flask(__name__)
 # db = client['sandeep']
