@@ -54,8 +54,11 @@ def test():
             cover_image = request.form.get("cover_image")
             contact_number = request.form.get("contact_number")
             comments=request.form.getlist("comments")
+            rating = request.form.get("rating")
+            nreviews = request.form.get("nreviews")
+            address = request.form.get("address")
             print(comments)
-            response = collection.insert_one({"restaurant_name":restaurant_name,"dp_image":dp_image,"cover_image":cover_image,"contact_number":contact_number,"comments":comments})
+            response = collection.insert_one({"restaurant_name":restaurant_name,"dp_image":dp_image,"cover_image":cover_image,"contact_number":contact_number,"comments":comments,"rating":rating,"nreviews":nreviews,"address":address})
             print(response.inserted_id)
             return Response(response = json.dumps({"message":"data send", "id": f"{response.inserted_id}"}),status = 200,mimetype="application/json")
         except Exception as e:
