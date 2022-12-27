@@ -4,11 +4,12 @@ from flask import render_template, request, Response
 from bson.objectid import ObjectId
 
 # client = pymongo.MongoClient("mongodb://127.0.0.1:27017/")
-client = pymongo.MongoClient("mongodb://sandydb:7WV8hpWGNL9EtSzXhk38dZ4tE4wa40ShLkrqKiDqZzhBOqloIrNvFji5UzJ9UgIQSpou5mPyzoy0QOWQYgvQmQ==@sandydb.mongo.cosmos.azure.com:10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@sandydb@")
-db = client['SSSv1']
+client = pymongo.MongoClient("mongodb://gryffindor:5KpAocBl5RDmr9XrXM6ZVWhhP0R14rXxKaL5jBQKVGrxqC4Sr1iNELIrh0xXcuBTSpVZLR9TOUs5ACDbS7FuDA==@gryffindor.mongo.cosmos.azure.com:10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@gryffindor@")
+db = client['sssv1']
 app = Flask(__name__)
 # db = client['sandeep']
-collection = db.restaurant
+# collection = db.restaurant
+collection = db.restauents_comments
 
 
 
@@ -86,6 +87,15 @@ def usersPatch(id):
 
 # db.products.updateOne({_id: 1}, {$set: {price: 899}})
 
+##########      GET  restaurent comments        #################
+
+@app.route("/rescomments",methods=["GET"])
+def rescomments():
+    data = list(collection.find())
+    print(data)
+    for users in data:
+        users["_id"]= str(users["_id"])
+    return Response(response = json.dumps(data),status = 200,mimetype="application/json")
 
 
 if __name__ == '__main__':
