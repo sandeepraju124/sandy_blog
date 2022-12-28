@@ -87,7 +87,7 @@ def usersPatch(id):
 
 # db.products.updateOne({_id: 1}, {$set: {price: 899}})
 
-##########      GET  restaurent comments        #################
+##########      GET all restaurent comments        #################
 
 @app.route("/rescomments",methods=["GET"])
 def rescomments():
@@ -97,6 +97,26 @@ def rescomments():
         users["_id"]= str(users["_id"])
     return Response(response = json.dumps(data),status = 200,mimetype="application/json")
 
+##########      GET only 1 restaurent by providing ID        #################
+
+@app.route("/rescomment/<id>",methods=["GET"])
+def rescomment(id):
+    data = collection.find_one(ObjectId(id))
+    print(data)
+    # for users in data:
+    data["_id"]= str(data["_id"])
+    return Response(response = json.dumps(data),status = 200,mimetype="application/json")
+
+
+##########      GET only 1 restaurent by providing restaurent name        #################
+
+@app.route("/rescommentname/<resname>",methods=["GET"])
+def rescommentname(resname):
+    data = collection.find_one({ "name": resname})
+    print(data)
+    # for users in data:
+    data["_id"]= str(data["_id"])
+    return Response(response = json.dumps(data),status = 200,mimetype="application/json")
 
 if __name__ == '__main__':
     app.run(debug=True)
