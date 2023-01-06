@@ -10,6 +10,7 @@ app = Flask(__name__)
 # db = client['sandeep']
 # collection = db.restaurant
 collection = db.restauents_comments
+user_collection = db.users
 
 
 
@@ -87,22 +88,24 @@ def usersPatch(id):
 
 # db.products.updateOne({_id: 1}, {$set: {price: 899}})
 
+####################################################################
 ##########      GET all restaurent comments        #################
+####################################################################
 
 @app.route("/rescomments",methods=["GET"])
 def rescomments():
     data = list(collection.find())
-    print(data)
+    # print(data)
     for users in data:
         users["_id"]= str(users["_id"])
     return Response(response = json.dumps(data),status = 200,mimetype="application/json")
 
 ##########      GET only 1 restaurent by providing ID        #################
 
-@app.route("/rescomment/<id>",methods=["GET"])
-def rescomment(id):
+@app.route("/rescommentid/<id>",methods=["GET"])
+def rescommentid(id):
     data = collection.find_one(ObjectId(id))
-    print(data)
+    # print(data)
     # for users in data:
     data["_id"]= str(data["_id"])
     return Response(response = json.dumps(data),status = 200,mimetype="application/json")
@@ -113,6 +116,29 @@ def rescomment(id):
 @app.route("/rescommentname/<resname>",methods=["GET"])
 def rescommentname(resname):
     data = collection.find_one({ "name": resname})
+    # print(data)
+    # for users in data:
+    data["_id"]= str(data["_id"])
+    return Response(response = json.dumps(data),status = 200,mimetype="application/json")
+
+####################################################################
+##########      GET all user data        #################
+####################################################################
+
+@app.route("/user",methods=["GET"])
+def user():
+    data = list(user_collection.find())
+    print(data)
+    for users in data:
+        users["_id"]= str(users["_id"])
+    return Response(response = json.dumps(data),status = 200,mimetype="application/json")
+
+
+##########      GET only 1 user by providing username        #################
+
+@app.route("/user/<username>",methods=["GET"])
+def singleuser(username):
+    data = user_collection.find_one({ "username": username})
     print(data)
     # for users in data:
     data["_id"]= str(data["_id"])
