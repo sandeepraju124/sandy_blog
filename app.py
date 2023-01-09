@@ -72,20 +72,20 @@ def test():
     
 ##########      patch the users        #################
 
-@app.route("/users/<id>",methods=["PATCH"])
-def usersPatch(id):
-    try:
-        data = collection.update_one(
-        {"_id":ObjectId(id)},
-        # {"$set":{"name":request.form.get("name")}}
-        {"$push":{"comments":request.form.get("comments")}}
-        )
-        print("xnxnxnxnxnxnxnxnxnxnxnxnxnx")
-        print(request.form.get("comments"))
-        return Response(response=json.dumps({"message":"user updated"}),status = 200,mimetype="application/json")
-    except Exception as ex:
-        print("KKKKKKKKKKKKKKKKKKKKKKKKKKK{}".format(ex))
-        return Response(response=json.dumps({"message":"sry cannot update user"}),status = 500,mimetype="application/json")
+# @app.route("/users/<id>",methods=["PATCH"])
+# def usersPatch(id):
+#     try:
+#         data = collection.update_one(
+#         {"_id":ObjectId(id)},
+#         # {"$set":{"name":request.form.get("name")}}
+#         {"$push":{"comments":request.form.get("comments")}}
+#         )
+#         print("xnxnxnxnxnxnxnxnxnxnxnxnxnx")
+#         print(request.form.get("comments"))
+#         return Response(response=json.dumps({"message":"user updated"}),status = 200,mimetype="application/json")
+#     except Exception as ex:
+#         print("KKKKKKKKKKKKKKKKKKKKKKKKKKK{}".format(ex))
+#         return Response(response=json.dumps({"message":"sry cannot update user"}),status = 500,mimetype="application/json")
 
 # db.products.updateOne({_id: 1}, {$set: {price: 899}})
 
@@ -168,15 +168,28 @@ def user():
 
 ##########      GET only 1 user by providing username        #################
 
-@app.route("/user/<username>",methods=["GET"])
-def singleuser(username):
-    data = user_collection.find_one({ "username": username})
+# @app.route("/user/<username>",methods=["GET"])
+# def singleuser(username):
+#     data = user_collection.find_one({ "username": username})
+#     print(data)
+#     # for users in data:
+#     data["_id"]= str(data["_id"])
+#     return Response(response = json.dumps(data),status = 200,mimetype="application/json")
+
+##########      GET only 1 user by providing user id        #################
+
+@app.route("/user/<userid>",methods=["GET"])
+def singleuserid(userid):
+    print("first")
+    id = userid
+    data = user_collection.find_one({ "userid":userid})
     print(data)
+    print("second")
+    print(userid)
+    
     # for users in data:
     data["_id"]= str(data["_id"])
     return Response(response = json.dumps(data),status = 200,mimetype="application/json")
-
-
 
 
 if __name__ == '__main__':
