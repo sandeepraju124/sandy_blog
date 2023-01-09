@@ -1,3 +1,4 @@
+from json import dumps
 import pymongo
 from flask import Flask, json
 from flask import render_template, request, Response
@@ -125,13 +126,45 @@ def rescommentname(resname):
 ##########      GET all user data        #################
 ####################################################################
 
-@app.route("/user",methods=["GET"])
+@app.route("/user",methods=["GET","POST"])
 def user():
-    data = list(user_collection.find())
-    print(data)
-    for users in data:
-        users["_id"]= str(users["_id"])
-    return Response(response = json.dumps(data),status = 200,mimetype="application/json")
+    if request.method=='GET':
+        print("hitted get in user")
+        data = list(user_collection.find())
+        # print(data)
+        for users in data:
+            users["_id"]= str(users["_id"])
+        return Response(response = json.dumps(data),status = 200,mimetype="application/json")
+    elif request.method=='POST':
+        print("hitted post in user")
+        name = request.form['name']
+        username = request.form['username']
+        email = request.form["email"]
+        dp = request.form["dp"]
+        street = request.form['street']
+        state = request.form['state']
+        zipcode = request.form['zipcode']
+        lat = request.form['lat']
+        lng = request.form['lng']
+        userid = request.form['userid']
+        result = user_collection.insert_one({
+                'name': name, 
+                'username': username,
+                'email': email,
+                'dp':dp,
+                "zipcode":zipcode,
+                "address":{
+                    "street":street,
+                    "state":state,
+                    "geo": {
+                            "lat": lat,
+                            "lng": lng
+                            }
+                },
+                "userid": userid
+                })
+        return dumps({'id': str(result.inserted_id)})
+
 
 
 ##########      GET only 1 user by providing username        #################
@@ -143,6 +176,40 @@ def singleuser(username):
     # for users in data:
     data["_id"]= str(data["_id"])
     return Response(response = json.dumps(data),status = 200,mimetype="application/json")
+
+##########      Post user        #################
+
+# @app.route('/post', methods=['POST'])
+# def create_post():
+    # if request.method=='POST':
+    #         name = request.form['name']
+    #         username = request.form['username']
+    #         email = request.form["email"]
+    #         dp = request.form["dp"]
+    #         street = request.form['street']
+    #         state = request.form['state']
+    #         zipcode = request.form['zipcode']
+    #         lat = request.form['lat']
+    #         lng = request.form['lng']
+    #         userid = request.form['userid']
+    #         result = user_collection.insert_one({
+    #             'name': name, 
+    #             'username': username,
+    #             'email': email,
+    #             'dp':dp,
+    #             "zipcode":zipcode,
+    #             "address":{
+    #                 "street":street,
+    #                 "state":state,
+    #                 "geo": {
+    #                         "lat": lat,
+    #                         "lng": lng
+    #                         }
+    #             },
+    #             "userid": userid
+    #             })
+    #         return dumps({'id': str(result.inserted_id)})
+
 
 if __name__ == '__main__':
     app.run(debug=True)
