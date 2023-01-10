@@ -148,44 +148,47 @@ def user():
         lng = request.form['lng']
         userid = request.form['userid']
         result = user_collection.insert_one({
-                'name': name, 
-                'username': username,
-                'email': email,
+                'name':name, 
+                'username':username,
+                'email':email,
                 'dp':dp,
                 "zipcode":zipcode,
                 "address":{
                     "street":street,
                     "state":state,
                     "geo": {
-                            "lat": lat,
-                            "lng": lng
+                            "lat":lat,
+                            "lng":lng
                             }
                 },
-                "userid": userid
+                "userid":userid
                 })
         return dumps({'id': str(result.inserted_id)})
 
 
 ##########      GET only 1 user by providing username        #################
 
-@app.route("/user/<username>",methods=["GET"])
-def singleuser(username):
-    data = user_collection.find_one({ "username": username})
-    print(data)
-    # for users in data:
-    data["_id"]= str(data["_id"])
-    return Response(response = json.dumps(data),status = 200,mimetype="application/json")
+# @app.route("/user/<username>",methods=["GET"])
+# def singleuser(username):
+#     data = user_collection.find_one({ "username": username})
+#     print(data)
+#     # for users in data:
+#     data["_id"]= str(data["_id"])
+#     return Response(response = json.dumps(data),status = 200,mimetype="application/json")
 
 ##########      GET only 1 user by providing user id        #################
 
 @app.route("/user/<userid>",methods=["GET"])
 def singleuserid(userid):
-    id = userid
-    data = user_collection.find_one({ "userid":userid})
-    
-    # for users in data:
-    data["_id"]= str(data["_id"])
-    return Response(response = json.dumps(data),status = 200,mimetype="application/json")
+    try:
+        data = user_collection.find_one({ "userid":userid})
+        
+        # for users in data:
+        data["_id"]= str(data["_id"])
+        return Response(response = json.dumps(data),status = 200,mimetype="application/json")
+    except Exception as e:
+            print("hitted exemption {}".format(e))
+            return Response(response=json.dumps({"message":"data not send"}),status = 500,mimetype="application/json")
 
 
 if __name__ == '__main__':
