@@ -168,24 +168,20 @@ def user():
 
 ##########      GET only 1 user by providing username        #################
 
-# @app.route("/user/<username>",methods=["GET"])
-# def singleuser(username):
-#     data = user_collection.find_one({ "username": username})
-#     print(data)
-#     # for users in data:
-#     data["_id"]= str(data["_id"])
-#     return Response(response = json.dumps(data),status = 200,mimetype="application/json")
+@app.route("/user/<username>",methods=["GET"])
+def singleuser(username):
+    data = user_collection.find_one({ "username": username})
+    print(data)
+    # for users in data:
+    data["_id"]= str(data["_id"])
+    return Response(response = json.dumps(data),status = 200,mimetype="application/json")
 
 ##########      GET only 1 user by providing user id        #################
 
 @app.route("/user/<userid>",methods=["GET"])
 def singleuserid(userid):
-    print("first")
     id = userid
     data = user_collection.find_one({ "userid":userid})
-    print(data)
-    print("second")
-    print(userid)
     
     # for users in data:
     data["_id"]= str(data["_id"])
