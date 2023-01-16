@@ -191,5 +191,35 @@ def singleuserid(userid):
             return Response(response=json.dumps({"message":"data not send"}),status = 500,mimetype="application/json")
 
 
+################ post user comment ######################
+
+@app.route("/postcomment",methods=["POST"])
+def postcomment():
+    comment = request.form['comment']
+    user_id= request.form['user_id']
+    resname= request.form['resname']
+    # result = collection.update(
+    #     {'name': resname}, 
+    #     {"$set": {
+    #     "comments": {
+    #         "comment":comment,
+    #         "userid":userid}
+    #     }}
+    #     )
+
+    new_comment = {
+        "comment": comment,
+        "first_name": "John",
+        "id": 123,
+        "last_name": "Doe",
+        "user_id": user_id
+    }
+
+    result = collection.update_one(
+        {"name": resname},
+        {"$push": {"comments": new_comment}}
+    )
+    return "done"
+
 if __name__ == '__main__':
     app.run(debug=True)
