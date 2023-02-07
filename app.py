@@ -223,7 +223,7 @@ def postcomment():
     )
     return "done"
 
-
+# --------------------------------------------services-------------------------------------
 ################ get all services ######################
 @app.route('/services',methods=["GET"])
 def services():
@@ -235,6 +235,18 @@ def services():
     
     except:
         return Response(response = json.dumps({"message":"no data available"}),status = 500,mimetype="application/json")
+
+@app.route("/services/<service>",methods=["GET"])
+def services_selected(service):
+    try:
+        data = list(services_collection.find({"catagory": service}))
+        print("this is data {}".format(data)) 
+        for users in data:
+            users["_id"]= str(users["_id"])
+        return Response(response = json.dumps(data),status = 200,mimetype="application/json")
+    except Exception as e:
+            print("hitted exemption {}".format(e))
+            return Response(response=json.dumps({"message":"not found"}),status = 500,mimetype="application/json")
 
 if __name__ == '__main__':
     app.run(debug=True)
