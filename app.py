@@ -12,6 +12,8 @@ app = Flask(__name__)
 # collection = db.restaurant
 collection = db.restauents_comments
 user_collection = db.users
+services_collection = db.services
+
 
 
 
@@ -220,6 +222,19 @@ def postcomment():
         {"$push": {"comments": new_comment}}
     )
     return "done"
+
+
+################ get all services ######################
+@app.route('/services',methods=["GET"])
+def services():
+    try:
+        data = list(services_collection.find())
+        for users in data:
+            users["_id"]= str(users["_id"])
+        return Response(response = json.dumps(data),status = 200,mimetype="application/json")
+    
+    except:
+        return Response(response = json.dumps({"message":"no data available"}),status = 500,mimetype="application/json")
 
 if __name__ == '__main__':
     app.run(debug=True)
