@@ -245,9 +245,24 @@ def services():
 def services_selected(service):
     try:
         data = list(services_collection.find({"catagory": service}))
-        print("this is data {}".format(data)) 
+        # print("this is data {}".format(data)) 
         for users in data:
             users["_id"]= str(users["_id"])
+        return Response(response = json.dumps(data),status = 200,mimetype="application/json")
+    except Exception as e:
+            print("hitted exemption {}".format(e))
+            return Response(response=json.dumps({"message":"not found"}),status = 500,mimetype="application/json")
+
+################ get services by id ######################
+@app.route("/serviceid/<id>",methods=["GET"])
+def services_selected_Id(id):
+    try:
+        print("this is id {}".format(id))
+        data = services_collection.find_one(ObjectId(id))
+        print("this is data {}".format(data)) 
+        # for users in data:
+        #     users["_id"]= str(users["_id"])
+        data["_id"]= str(data["_id"])
         return Response(response = json.dumps(data),status = 200,mimetype="application/json")
     except Exception as e:
             print("hitted exemption {}".format(e))

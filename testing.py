@@ -24,7 +24,8 @@ id ="63ac6dd1ed41cbb87b5ab4f8"
 # collection.find_one(ObjectId(id))
 # cursor = user.find_one(myquery2)
 # cursor = services.find(myquery3)
-cursor = list(services.find({"catagory": "barber"}))
+# cursor = list(services.find({"catagory": "barber"}))
+cursor = services.find_one(ObjectId('63dfde4110891aa38b95ba0b'))
 print(cursor)
 # print(str(list(cursor)))
 # for x in cursor:
