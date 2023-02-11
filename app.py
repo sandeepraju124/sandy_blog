@@ -10,12 +10,14 @@ db = client['sssv1']
 app = Flask(__name__)
 # db = client['sandeep']
 # collection = db.restaurant
-collection = db.restauents_comments
+service_comments_collection = db.restauents_comments
 user_collection = db.users
 services_collection = db.services
 
 
-
+# important
+# find with object id
+# data = list(service_comments_collection.find({"_id": ObjectId(id)}))
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
@@ -23,7 +25,7 @@ def home():
         # content = request.get_json(force = True)
         try:
             data = request.form.get("email")
-            collection.insert_one({"email": data})
+            service_comments_collection.insert_one({"email": data})
             return "inserted data"
         except Exception as e:
             # print(e)
@@ -39,7 +41,7 @@ def home():
 @app.route('/users',methods=["GET"])
 def users():
     try:
-        data = list(collection.find())
+        data = list(service_comments_collection.find())
         for users in data:
             users["_id"]= str(users["_id"])
         return Response(response = json.dumps(data),status = 200,mimetype="application/json")
@@ -63,7 +65,7 @@ def test():
             nreviews = request.form.get("nreviews")
             address = request.form.get("address")
             print(comments)
-            response = collection.insert_one({"restaurant_name":restaurant_name,"dp_image":dp_image,"cover_image":cover_image,"contact_number":contact_number,"comments":comments,"rating":rating,"nreviews":nreviews,"address":address})
+            response = service_comments_collection.insert_one({"restaurant_name":restaurant_name,"dp_image":dp_image,"cover_image":cover_image,"contact_number":contact_number,"comments":comments,"rating":rating,"nreviews":nreviews,"address":address})
             print(response.inserted_id)
             return Response(response = json.dumps({"message":"data send", "id": f"{response.inserted_id}"}),status = 200,mimetype="application/json")
         except Exception as e:
@@ -97,7 +99,7 @@ def test():
 
 @app.route("/rescomments",methods=["GET"])
 def rescomments():
-    data = list(collection.find())
+    data = list(service_comments_collection.find())
     # print(data)
     for users in data:
         users["_id"]= str(users["_id"])
@@ -107,7 +109,7 @@ def rescomments():
 
 @app.route("/rescommentid/<id>",methods=["GET"])
 def rescommentid(id):
-    data = collection.find_one(ObjectId(id))
+    data = service_comments_collection.find_one(ObjectId(id))
     # print(data)
     # for users in data:
     data["_id"]= str(data["_id"])
@@ -118,7 +120,7 @@ def rescommentid(id):
 
 @app.route("/rescommentname/<resname>",methods=["GET"])
 def rescommentname(resname):
-    data = collection.find_one({ "name": resname})
+    data = service_comments_collection.find_one({ "name": resname})
     # print(data)
     # for users in data:
     data["_id"]= str(data["_id"])
@@ -217,7 +219,7 @@ def postcomment():
         "user_id": user_id
     }
 
-    result = collection.update_one(
+    result = service_comments_collection.update_one(
         {"name": resname},
         {"$push": {"comments": new_comment}}
     )
@@ -260,14 +262,25 @@ def services_selected_Id(id):
         print("this is id {}".format(id))
         data = services_collection.find_one(ObjectId(id))
         print("this is data {}".format(data)) 
-        # for users in data:
-        #     users["_id"]= str(users["_id"])
         data["_id"]= str(data["_id"])
         return Response(response = json.dumps(data),status = 200,mimetype="application/json")
     except Exception as e:
             print("hitted exemption {}".format(e))
             return Response(response=json.dumps({"message":"not found"}),status = 500,mimetype="application/json")
 
+################ get services comments by id ######################
+@app.route("/commentsid/<id>",methods=["GET"])
+def services_comments_Id(id):
+    try:
+        print("this is id {}".format(id))
+        data = list(service_comments_collection.find({"serviceid": id}))
+        print("this is data {}".format(data)) 
+        for users in data:
+            users["_id"]= str(users["_id"])
+        return Response(response = json.dumps(data),status = 200,mimetype="application/json")
+    except Exception as e:
+            print("hitted exemption {}".format(e))
+            return Response(response=json.dumps({"message":"not found"}),status = 500,mimetype="application/json")
 
 if __name__ == '__main__':
     app.run(debug=True)
