@@ -273,10 +273,10 @@ def services_selected_Id(id):
 def services_comments_Id(id):
     try:
         print("this is id {}".format(id))
-        data = list(service_comments_collection.find({"serviceid": id}))
+        data = service_comments_collection.find_one({"serviceid": id})
         print("this is data {}".format(data)) 
-        for users in data:
-            users["_id"]= str(users["_id"])
+        # for users in data:
+        data["_id"]= str(data["_id"])
         return Response(response = json.dumps(data),status = 200,mimetype="application/json")
     except Exception as e:
             print("hitted exemption {}".format(e))
