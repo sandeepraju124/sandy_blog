@@ -109,7 +109,8 @@ def rescomments():
 
 @app.route("/rescommentid/<id>",methods=["GET"])
 def rescommentid(id):
-    data = service_comments_collection.find_one(ObjectId(id))
+    # data = service_comments_collection.find_one(ObjectId(id))
+    data = service_comments_collection.find_one({"serviceid": id})
     # print(data)
     # for users in data:
     data["_id"]= str(data["_id"])
