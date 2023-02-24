@@ -295,13 +295,11 @@ def add_comment():
     document = service_comments_collection.find_one({'serviceid': serviceid})
 
     if document is None:
-        # Create new document if serviceid is not present
         document = {'serviceid': serviceid, 'comments': []}
-
-    # Append new comment to comments list
+        document["comments"].append({"comment":comment,"user_id":user_id})
+        service_comments_collection.insert_one(document)
+    
     document['comments'].append({'comment': comment, 'user_id': user_id})
-
-    # Update document in the database
     service_comments_collection.update_one({'serviceid': serviceid}, {'$set': document})
 
     return jsonify({'message': 'Comment added successfully.'}), 200

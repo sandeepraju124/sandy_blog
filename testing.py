@@ -25,12 +25,16 @@ id ="63ac6dd1ed41cbb87b5ab4f8"
 # cursor = user.find_one(myquery2)
 # cursor = services.find(myquery3)
 # cursor = list(services.find({"catagory": "barber"}))
-document = collection.find_one({"serviceid": "63f116b0190416d07f3687ec"})
-# document['comments'].append({'comment': comment, 'user_id': user_id})
+document = collection.find_one({"serviceid": "iiiiiiiiiiii"})
 print(document)
-document["comments"].append({"comment":"this is fucking aswom","user_id":"cbdjenekjdjbe"})
-# print(document)
-collection.update_one({"serviceid": "63f116b0190416d07f3687ec"}, {'$set': document})
+if document is None:
+    print("none")
+    document = {'serviceid': "xxnxnxnxnnxnx", 'comments': []}
+    print(document)
+    document["comments"].append({"comment":"ooooooooooo","user_id":"vvvvvvvvvvvv"})
+    print(document)
+    collection.insert_one(document)
+    # collection.update_one({"serviceid": "63f116b0190416d07f3687ec"}, {'$set': document})
 
 # cursor = services.find_one(ObjectId('63dfde4110891aa38b95ba0b'))
 # print(document)
