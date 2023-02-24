@@ -290,12 +290,13 @@ def add_comment():
     serviceid = request.form['serviceid']
     comment = request.form['comment']
     user_id = request.form['user_id']
+    name = request.form['name']
 
     # Find document with matching serviceid
     document = service_comments_collection.find_one({'serviceid': serviceid})
 
     if document is None:
-        document = {'serviceid': serviceid, 'comments': []}
+        document = {'serviceid': serviceid,'name':name, 'comments': []}
         document["comments"].append({"comment":comment,"user_id":user_id})
         service_comments_collection.insert_one(document)
     
