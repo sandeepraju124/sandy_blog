@@ -1,6 +1,6 @@
 from json import dumps
 import pymongo
-from flask import Flask, json
+from flask import Flask, json, jsonify
 from flask import render_template, request, Response
 from bson.objectid import ObjectId
 
@@ -282,6 +282,25 @@ def services_comments_Id(id):
     except Exception as e:
             print("hitted exemption {}".format(e))
             return Response(response=json.dumps({"message":"not found"}),status = 500,mimetype="application/json")
+
+# -----------------------------
+
+@app.route('/addcomment', methods=['POST'])
+def add_comment():
+    serviceid = request.form['serviceid']
+    comment = request.form['comment']
+    user_id = request.form['user_id']
+
+    # Find document with matching serviceid
+    document = service_comments_collection.find_one({'serviceid': serviceid})
+
+    # Append new comment to comments list
+    document['comments'].append({'comment': comment, 'user_id': user_id})
+
+    # Update document in the database
+    service_comments_collection.update_one({'serviceid': serviceid}, {'$set': document})
+
+    return jsonify({'message': 'Comment added successfully.'}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
