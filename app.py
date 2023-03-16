@@ -10,7 +10,7 @@ db = client['sssv1']
 app = Flask(__name__)
 # db = client['sandeep']
 # collection = db.restaurant
-service_comments_collection = db.restauents_comments
+service_comments_collection = db.services_comments
 user_collection = db.users
 services_collection = db.services
 

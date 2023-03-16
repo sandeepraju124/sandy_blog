@@ -26,7 +26,7 @@ id ="63ac6dd1ed41cbb87b5ab4f8"
 # cursor = services.find(myquery3)
 # cursor = list(services.find({"catagory": "barber"}))
 document = collection.find_one({"serviceid": "iiiiiiiiiiii"})
-print(document)
+print(document) 
 if document is None:
     print("none")
     document = {'serviceid': "xxnxnxnxnnxnx", 'comments': []}
