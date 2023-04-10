@@ -107,7 +107,7 @@ def rescomments():
 
 ##########      GET only 1 restaurent by providing ID        #################
 
-@app.route("/rescommentIdForComments/<id>",methods=["GET"])
+@app.route("/serviceIdForComments/<id>",methods=["GET"])
 def rescommentIdForComments(id):
     # data = service_comments_collection.find_one(ObjectId(id))
     data = service_comments_collection.find_one({"serviceid": id})
