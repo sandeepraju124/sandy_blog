@@ -5,7 +5,7 @@ from flask import render_template, request, Response
 from bson.objectid import ObjectId
 
 # client = pymongo.MongoClient("mongodb://127.0.0.1:27017/")
-client = pymongo.MongoClient("mongodb://fuhrer1:F3xt4UkHOhVLC3frSKwt0usXzZpjYqI1G0thAQy6rBtqNMh6GGYbJOBgyJbqLUwgtbyDTy3XL89DACDbBVyfXg==@fuhrer1.mongo.cosmos.azure.com:10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@fuhrer1@")
+client = pymongo.MongoClient("mongodb://entreprenuer:R5vnleLp0q2OwDYOJx8IAeVdfLQgJU1MUYd7MVWU4d71napzz3J5hfDfKjvm4AA39l8t2eAwwFrgACDbcT1XtA==@entreprenuer.mongo.cosmos.azure.com:10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@entreprenuer@")
 db = client['sssv1']
 app = Flask(__name__)
 # db = client['sandeep']
