@@ -5,7 +5,7 @@ from flask import render_template, request, Response
 from bson.objectid import ObjectId
 
 # client = pymongo.MongoClient("mongodb://127.0.0.1:27017/")
-client = pymongo.MongoClient("mongodb://fuhrer1:F3xt4UkHOhVLC3frSKwt0usXzZpjYqI1G0thAQy6rBtqNMh6GGYbJOBgyJbqLUwgtbyDTy3XL89DACDbBVyfXg==@fuhrer1.mongo.cosmos.azure.com:10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@fuhrer1@")
+client = pymongo.MongoClient("mongodb://entreprenuer:R5vnleLp0q2OwDYOJx8IAeVdfLQgJU1MUYd7MVWU4d71napzz3J5hfDfKjvm4AA39l8t2eAwwFrgACDbcT1XtA==@entreprenuer.mongo.cosmos.azure.com:10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@entreprenuer@")
 db = client['sssv1']
 app = Flask(__name__)
 # db = client['sandeep']
@@ -234,16 +234,51 @@ def postcomment():
 ####################################################################
 
 ################ get all services ######################
-@app.route('/services',methods=["GET"])
+@app.route('/services',methods=["GET","POST"])
 def services():
-    try:
-        data = list(services_collection.find())
-        for users in data:
-            users["_id"]= str(users["_id"])
-        return Response(response = json.dumps(data),status = 200,mimetype="application/json")
+    if request.method=='GET':
+        try:
+            data = list(services_collection.find())
+            for users in data:
+                users["_id"]= str(users["_id"])
+            return Response(response = json.dumps(data),status = 200,mimetype="application/json")
+        
+        except:
+            return Response(response = json.dumps({"message":"no data available"}),status = 500,mimetype="application/json")
+        
+    if request.method=='POST':
+        try:
+            business_name = request.form['business_name']
+            business_description = request.form['business_description']
+            contact_information = request.form['contact_information']
+            country = request.form['country']
+            catagory = request.form['catagory']
+            sub_catagory = request.form['sub_catagory']
+
+
+            service_fields = {}
+            if business_name:
+                service_fields["business_name"] = business_name
+            if business_description:
+                service_fields["business_description"] = business_description
+            if contact_information:
+                service_fields["contact_information"] = contact_information
+            if country:
+                service_fields["country"] = country
+            if catagory:
+                service_fields["catagory"] = catagory
+            if sub_catagory:
+                service_fields["sub_catagory"] = sub_catagory
+
+
+            services_collection.insert_one(service_fields)
+
+            return jsonify({'message': 'Service added successfully.'}), 200
     
-    except:
-        return Response(response = json.dumps({"message":"no data available"}),status = 500,mimetype="application/json")
+        except Exception as e:
+            return  jsonify({'message': f'Error adding service: {str(e)}'}), 500
+
+
 
 ################ get services by catogory ######################
 @app.route("/services/<service>",methods=["GET"])
@@ -289,26 +324,39 @@ def services_comments_Id(id):
 
 @app.route('/addcomment', methods=['POST'])
 def add_comment():
-    serviceid = request.form['serviceid']
-    comment = request.form['comment']
-    user_id = request.form['user_id']
-    name = request.form['name']
+    try:
+        serviceid = request.form['serviceid']
+        comment = request.form['comment']
+        user_id = request.form['user_id']
+        name = request.form['name']
 
-    # Find document with matching serviceid
-    document = service_comments_collection.find_one({'serviceid': serviceid})
+        # Find document with matching serviceid
+        document = service_comments_collection.find_one({'serviceid': serviceid})
 
-    if document is not None:
-        document['comments'].append({'comment': comment, 'user_id': user_id})
-        service_comments_collection.update_one({'serviceid': serviceid}, {'$set': document})
+        if document is not None:
+            document['comments'].append({'comment': comment, 'user_id': user_id})
+            service_comments_collection.update_one({'serviceid': serviceid}, {'$set': document})
 
-    else: 
-        document = {'serviceid': serviceid,'name':name, 'comments': []}
-        document["comments"].append({"comment":comment,"user_id":user_id})
-        service_comments_collection.insert_one(document)
+        else: 
+            document = {'serviceid': serviceid,'name':name, 'comments': []}
+            document["comments"].append({"comment":comment,"user_id":user_id})
+            service_comments_collection.insert_one(document)
 
-    
+        
 
-    return jsonify({'message': 'Comment added successfully.'}), 200
+        return jsonify({'message': 'Comment added successfully.'}), 200
+    except Exception as e:
+        return jsonify({'message': f'Error adding comment: {str(e)}'}), 500
+
+
+
+########################################### BACKEND APP #####################################
+
+
+
+
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
