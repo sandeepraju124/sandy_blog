@@ -1,8 +1,11 @@
+import datetime
 from json import dumps
 import pymongo
 from flask import Flask, json, jsonify
 from flask import render_template, request, Response
 from bson.objectid import ObjectId
+from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
+import time
 
 # client = pymongo.MongoClient("mongodb://127.0.0.1:27017/")
 client = pymongo.MongoClient("mongodb://entreprenuer:R5vnleLp0q2OwDYOJx8IAeVdfLQgJU1MUYd7MVWU4d71napzz3J5hfDfKjvm4AA39l8t2eAwwFrgACDbcT1XtA==@entreprenuer.mongo.cosmos.azure.com:10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@entreprenuer@")
@@ -354,6 +357,38 @@ def add_comment():
 
 
 
+########################################### testing #####################################
+
+@app.route('/uploadimage',methods=['POST'])
+def upload_image():
+    try:
+        
+        file = request.files['image']
+        account_name = 'prometheus1137'
+        account_key = 'QeCd4oED1ZKVaP0W9ncB7KYUv9qulmESzjb6NCpJQ/OMBlY8eWiSau+Jvu8AMfpV2ce31T6I9Hhy+AStf6oPkg=='
+        container_name = 'sssv1'
+        timestamp = time.time()
+        timestamp_ms = int(timestamp *  1000)
+        filename = file.filename
+        file_extension = filename.split('.')[-1]
+        blob_name = str(timestamp_ms) + '.' + file_extension
+        connection_string = f"DefaultEndpointsProtocol=https;AccountName={account_name};AccountKey={account_key};EndpointSuffix=core.windows.net"
+        # DefaultEndpointsProtocol=https;AccountName=prometheus1137;AccountKey=QeCd4oED1ZKVaP0W9ncB7KYUv9qulmESzjb6NCpJQ/OMBlY8eWiSau+Jvu8AMfpV2ce31T6I9Hhy+AStf6oPkg==;EndpointSuffix=core.windows.net
+        
+        blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+        # container_client = BlobServiceClient.get_container_client(container=container_name)
+        
+        container_client = blob_service_client.get_container_client(container_name)
+        blob_client = container_client.get_blob_client(blob_name)
+
+
+        blob_client.upload_blob(file.read())
+        blob_url = blob_client.url
+        return blob_url, 200 
+
+
+    except Exception as e:
+        return str(e), 500
 
 
 
