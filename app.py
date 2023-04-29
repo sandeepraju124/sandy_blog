@@ -419,4 +419,3 @@ def upload_multiple_image():
 
 if __name__ == '__main__':
     app.run(debug=True)
-# # rahul
