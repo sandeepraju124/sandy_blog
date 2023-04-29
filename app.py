@@ -368,7 +368,7 @@ def upload_image():
         account_key = 'QeCd4oED1ZKVaP0W9ncB7KYUv9qulmESzjb6NCpJQ/OMBlY8eWiSau+Jvu8AMfpV2ce31T6I9Hhy+AStf6oPkg=='
         container_name = 'sssv1'
         timestamp = time.time()
-        timestamp_ms = int(timestamp *  1000)
+        timestamp_ms = int(timestamp * 1000)
         filename = file.filename
         file_extension = filename.split('.')[-1]
         blob_name = str(timestamp_ms) + '.' + file_extension
@@ -376,11 +376,10 @@ def upload_image():
         # DefaultEndpointsProtocol=https;AccountName=prometheus1137;AccountKey=QeCd4oED1ZKVaP0W9ncB7KYUv9qulmESzjb6NCpJQ/OMBlY8eWiSau+Jvu8AMfpV2ce31T6I9Hhy+AStf6oPkg==;EndpointSuffix=core.windows.net
         
         blob_service_client = BlobServiceClient.from_connection_string(connection_string)
-        # container_client = BlobServiceClient.get_container_client(container=container_name)
         
         container_client = blob_service_client.get_container_client(container_name)
         blob_client = container_client.get_blob_client(blob_name)
-
+ 
 
         blob_client.upload_blob(file.read())
         blob_url = blob_client.url
@@ -390,6 +389,31 @@ def upload_image():
     except Exception as e:
         return str(e), 500
 
+@app.route('/uploadmultipleimages', methods = ["POST"])
+def upload_multiple_image():
+    try:
+        account_name = 'prometheus1137'
+        account_key = 'QeCd4oED1ZKVaP0W9ncB7KYUv9qulmESzjb6NCpJQ/OMBlY8eWiSau+Jvu8AMfpV2ce31T6I9Hhy+AStf6oPkg=='
+        container_name = 'sssv1'
+        timestamp = int(time.time() * 1000)
+        connection_string = f"DefaultEndpointsProtocol=https;AccountName={account_name};AccountKey={account_key};EndpointSuffix=core.windows.net"
+        blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+        container_client = blob_service_client.get_container_client(container_name)
+
+        blob_urls = []
+        for file in request.files.getlist('image'):
+            filename = file.filename
+            file_extension = filename.split('.')[-1]
+            blob_name = str(timestamp) + '_' + filename
+            blob_client = container_client.get_blob_client(blob_name)
+
+            blob_client.upload_blob(file.read())
+            blob_urls.append(blob_client.url)
+
+        return {'blob_urls': blob_urls}, 200
+
+    except Exception as e:
+        return str(e), 500
 
 
 
