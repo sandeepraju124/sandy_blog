@@ -18,6 +18,20 @@ user_collection = db.users
 services_collection = db.services
 
 
+
+# azure storage details
+account_name = 'prometheus1137'
+account_key = 'QeCd4oED1ZKVaP0W9ncB7KYUv9qulmESzjb6NCpJQ/OMBlY8eWiSau+Jvu8AMfpV2ce31T6I9Hhy+AStf6oPkg=='
+container_name = 'sssv1'
+timestamp = int(time.time() * 1000)
+print("time")
+print(int(time.time()))
+connection_string = f"DefaultEndpointsProtocol=https;AccountName={account_name};AccountKey={account_key};EndpointSuffix=core.windows.net"
+blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+container_client = blob_service_client.get_container_client(container_name)
+
+
+
 # important
 # find with object id
 # data = list(service_comments_collection.find({"_id": ObjectId(id)}))
@@ -257,9 +271,12 @@ def services():
             country = request.form['country']
             catagory = request.form['catagory']
             sub_catagory = request.form['sub_catagory']
+            profile_image = request.files['profile_image']
 
 
             service_fields = {}
+            blob_urls = []
+
             if business_name:
                 service_fields["business_name"] = business_name
             if business_description:
@@ -273,8 +290,38 @@ def services():
             if sub_catagory:
                 service_fields["sub_catagory"] = sub_catagory
 
+            if 'profile_image' in request.files:
+                profile_image = request.files['profile_image']
+                filename = profile_image.filename
+                print("filename")
+                print(filename)
+                print(timestamp)
+                blob_name = str(timestamp) + '_' + filename
+                blob_client = container_client.get_blob_client(blob_name)
+                blob_client.upload_blob(profile_image.read())
+                blob_url = blob_client.url
+                service_fields["profile_image"] = blob_url
+
+
+
+
+            if 'images' in request.files:
+                for file in request.files.getlist('images'):
+                    filename = file.filename
+                    file_extension = filename.split('.')[-1]
+                    blob_name = str(timestamp) + '_' + filename
+                    blob_client = container_client.get_blob_client(blob_name)
+
+                    blob_client.upload_blob(file.read())
+                    blob_urls.append(blob_client.url)
+
+            service_fields["images"] = blob_urls
+            # if sub_catagory:
+            #     service_fields["images"] = sub_catagory
+
 
             services_collection.insert_one(service_fields)
+            print("blob_urls {}".format(blob_urls))
 
             return jsonify({'message': 'Service added successfully.'}), 200
     
@@ -364,6 +411,7 @@ def upload_image():
     try:
         
         file = request.files['image']
+        business_name = request.form['business_name']
         account_name = 'prometheus1137'
         account_key = 'QeCd4oED1ZKVaP0W9ncB7KYUv9qulmESzjb6NCpJQ/OMBlY8eWiSau+Jvu8AMfpV2ce31T6I9Hhy+AStf6oPkg=='
         container_name = 'sssv1'
@@ -376,13 +424,19 @@ def upload_image():
         # DefaultEndpointsProtocol=https;AccountName=prometheus1137;AccountKey=QeCd4oED1ZKVaP0W9ncB7KYUv9qulmESzjb6NCpJQ/OMBlY8eWiSau+Jvu8AMfpV2ce31T6I9Hhy+AStf6oPkg==;EndpointSuffix=core.windows.net
         
         blob_service_client = BlobServiceClient.from_connection_string(connection_string)
-        
         container_client = blob_service_client.get_container_client(container_name)
         blob_client = container_client.get_blob_client(blob_name)
- 
+
 
         blob_client.upload_blob(file.read())
         blob_url = blob_client.url
+        print(blob_url)
+
+        data = {'business_name': business_name, 'image_url': blob_url}
+        services_collection.insert_one(data)
+ 
+
+        
         return blob_url, 200 
 
 
@@ -392,13 +446,8 @@ def upload_image():
 @app.route('/uploadmultipleimages', methods = ["POST"])
 def upload_multiple_image():
     try:
-        account_name = 'prometheus1137'
-        account_key = 'QeCd4oED1ZKVaP0W9ncB7KYUv9qulmESzjb6NCpJQ/OMBlY8eWiSau+Jvu8AMfpV2ce31T6I9Hhy+AStf6oPkg=='
-        container_name = 'sssv1'
-        timestamp = int(time.time() * 1000)
-        connection_string = f"DefaultEndpointsProtocol=https;AccountName={account_name};AccountKey={account_key};EndpointSuffix=core.windows.net"
-        blob_service_client = BlobServiceClient.from_connection_string(connection_string)
-        container_client = blob_service_client.get_container_client(container_name)
+
+        business_name = request.form['business_name']
 
         blob_urls = []
         for file in request.files.getlist('image'):
@@ -409,6 +458,9 @@ def upload_multiple_image():
 
             blob_client.upload_blob(file.read())
             blob_urls.append(blob_client.url)
+
+            data = {'business_name': business_name, 'image_urls': blob_urls}
+            services_collection.insert_one(data)
 
         return {'blob_urls': blob_urls}, 200
 
