@@ -411,7 +411,7 @@ def upload_image():
     try:
         
         file = request.files['image']
-        business_name = request.form['business_name']
+        # business_name = request.form['business_name']
         account_name = 'prometheus1137'
         account_key = 'QeCd4oED1ZKVaP0W9ncB7KYUv9qulmESzjb6NCpJQ/OMBlY8eWiSau+Jvu8AMfpV2ce31T6I9Hhy+AStf6oPkg=='
         container_name = 'sssv1'
@@ -432,7 +432,8 @@ def upload_image():
         blob_url = blob_client.url
         print(blob_url)
 
-        data = {'business_name': business_name, 'image_url': blob_url}
+        # data = {'business_name': business_name, 'image_url': blob_url}
+        data = {'image_url': blob_url}
         services_collection.insert_one(data)
  
 
