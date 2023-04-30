@@ -16,6 +16,7 @@ app = Flask(__name__)
 service_comments_collection = db.services_comments
 user_collection = db.users
 services_collection = db.services
+askcommunity = db.ask_community
 
 
 
@@ -473,6 +474,31 @@ def upload_multiple_image():
 
     except Exception as e:
         return str(e), 500
+    
+################ ask the community ######################
+
+@app.route('/askcommunity',methods=["GET"])
+def ask_community():
+    try:
+        data = list(askcommunity.find())
+        for collection in data:
+            collection["_id"]= str(collection["_id"])
+        return Response(response = json.dumps(data),status = 200,mimetype="application/json")
+        
+    except:
+        return Response(response = json.dumps({"message":"no data available"}),status = 500,mimetype="application/json")
+    
+
+@app.route('/askcommunitybyid/<id>',methods=["GET"])
+def ask_community_id(id):
+    try:
+        data = askcommunity.find_one({"businessId": id})
+        data["_id"]= str(data["_id"])
+        return Response(response = json.dumps(data),status = 200,mimetype="application/json")
+    except Exception as e:
+            print("hitted exemption {}".format(e))
+            return Response(response=json.dumps({"message":"not found"}),status = 500,mimetype="application/json")
+    
 
 
 
