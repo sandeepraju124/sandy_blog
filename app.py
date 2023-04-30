@@ -271,6 +271,8 @@ def services():
             country = request.form['country']
             catagory = request.form['catagory']
             sub_catagory = request.form['sub_catagory']
+            latitude = request.form['latitude']
+            langitude = request.form['langitude']
             profile_image = request.files['profile_image']
 
 
@@ -289,6 +291,10 @@ def services():
                 service_fields["catagory"] = catagory
             if sub_catagory:
                 service_fields["sub_catagory"] = sub_catagory
+            if latitude:
+                service_fields["latitude"] = latitude
+            if langitude:
+                service_fields["langitude"] = langitude
 
             if 'profile_image' in request.files:
                 profile_image = request.files['profile_image']
