@@ -474,8 +474,10 @@ def upload_multiple_image():
 
     except Exception as e:
         return str(e), 500
-    
-################ ask the community ######################
+
+########################################################
+################ ask the community #####################
+########################################################
 
 @app.route('/askcommunity',methods=["GET"])
 def ask_community():
@@ -487,7 +489,8 @@ def ask_community():
         
     except:
         return Response(response = json.dumps({"message":"no data available"}),status = 500,mimetype="application/json")
-    
+
+################ ask the community by id #####################  
 
 @app.route('/askcommunitybyid/<id>',methods=["GET"])
 def ask_community_id(id):
