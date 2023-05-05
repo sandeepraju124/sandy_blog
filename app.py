@@ -337,11 +337,11 @@ def services():
 
 
 
-################ get services by catogory ######################
-@app.route("/services/<service>",methods=["GET"])
-def services_selected(service):
+################ get business by category ######################
+@app.route("/category/<category>",methods=["GET"])
+def category(category):
     try:
-        data = list(services_collection.find({"catagory": service}))
+        data = list(services_collection.find({"category": category}))
         # print("this is data {}".format(data)) 
         for users in data:
             users["_id"]= str(users["_id"])
@@ -349,19 +349,48 @@ def services_selected(service):
     except Exception as e:
             print("hitted exemption {}".format(e))
             return Response(response=json.dumps({"message":"not found"}),status = 500,mimetype="application/json")
-
-################ get services by id ######################
-@app.route("/serviceid/<id>",methods=["GET"])
-def services_selected_Id(id):
+    
+################ get business by subcategory ######################
+@app.route("/subcategory/<subcategory>",methods=["GET"])
+def subcategory(subcategory):
     try:
-        print("this is id {}".format(id))
-        data = services_collection.find_one(ObjectId(id))
-        print("this is data {}".format(data)) 
+        data = list(services_collection.find({"sub_category": subcategory}))
+        for users in data:
+            users["_id"]= str(users["_id"])
+        return Response(response = json.dumps(data),status = 200,mimetype="application/json")
+    except Exception as e:
+            print("hitted exemption {}".format(e))
+            return Response(response=json.dumps({"message":"not found"}),status = 500,mimetype="application/json")
+    
+
+################ get business by uid ######################
+@app.route("/uid/<uid>",methods=["GET"])
+def uid(uid):
+    try:
+        data = services_collection.find_one({"business_uid": uid})
         data["_id"]= str(data["_id"])
         return Response(response = json.dumps(data),status = 200,mimetype="application/json")
     except Exception as e:
             print("hitted exemption {}".format(e))
             return Response(response=json.dumps({"message":"not found"}),status = 500,mimetype="application/json")
+
+################ get business by id ######################
+
+@app.route("/objid/<objid>",methods=["GET"])
+def objid(objid):
+    try:
+        data = services_collection.find_one(ObjectId(objid))
+        data["_id"]= str(data["_id"])
+        return Response(response = json.dumps(data),status = 200,mimetype="application/json")
+    except Exception as e:
+            print("hitted exemption {}".format(e))
+            return Response(response=json.dumps({"message":"not found"}),status = 500,mimetype="application/json")
+
+
+
+
+
+
 
 ################ get services comments by id ######################
 @app.route("/commentsid/<id>",methods=["GET"])
