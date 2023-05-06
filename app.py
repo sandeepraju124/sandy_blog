@@ -259,7 +259,9 @@ def services():
             data = list(services_collection.find())
             for users in data:
                 users["_id"]= str(users["_id"])
+            # response_data = {"services": data, "categories": list(categories), "subcategories": list(subcategories)}
             return Response(response = json.dumps(data),status = 200,mimetype="application/json")
+        
         
         except:
             return Response(response = json.dumps({"message":"no data available"}),status = 500,mimetype="application/json")
@@ -342,10 +344,12 @@ def services():
 def category(category):
     try:
         data = list(services_collection.find({"category": category}))
-        # print("this is data {}".format(data)) 
         for users in data:
             users["_id"]= str(users["_id"])
-        return Response(response = json.dumps(data),status = 200,mimetype="application/json")
+        # categories = set(service['category'] for service in data)
+        subcategories = set(service['sub_category'] for service in data)
+        response_data = {"services": data,"subcategories": list(subcategories)}
+        return Response(response=json.dumps(response_data), status=200, mimetype="application/json")
     except Exception as e:
             print("hitted exemption {}".format(e))
             return Response(response=json.dumps({"message":"not found"}),status = 500,mimetype="application/json")
@@ -388,7 +392,8 @@ def objid(objid):
 
 
 
-
+# ____________________________________________________________________________________________________________________
+# _____________________________________________________________________________________________________________________
 
 
 
