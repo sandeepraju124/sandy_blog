@@ -526,10 +526,10 @@ def ask_community():
 
 ################ ask the community by id #####################  
 
-@app.route('/askcommunitybyid/<id>',methods=["GET"])
-def ask_community_id(id):
+@app.route('/uid/<uid>',methods=["GET"])
+def ask_community_id(uid):
     try:
-        data = askcommunity.find_one({"businessId": id})
+        data = askcommunity.find_one({"business_uid": uid})
         data["_id"]= str(data["_id"])
         return Response(response = json.dumps(data),status = 200,mimetype="application/json")
     except Exception as e:
