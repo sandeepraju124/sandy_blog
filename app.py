@@ -526,7 +526,7 @@ def ask_community():
 
 ################ ask the community by id #####################  
 
-@app.route('/uid/<uid>',methods=["GET"])
+@app.route('/askcommunity/<uid>',methods=["GET"])
 def ask_community_id(uid):
     try:
         data = askcommunity.find_one({"business_uid": uid})
