@@ -395,21 +395,28 @@ def objid(objid):
 # ____________________________________________________________________________________________________________________
 # _____________________________________________________________________________________________________________________
 
-
+########################################################
+################ comment section #####################
+########################################################
 
 ################ get services comments by id ######################
-@app.route("/commentsid/<id>",methods=["GET"])
-def services_comments_Id(id):
+@app.route("/commentsuid/<uid>", methods=["GET"])
+def comments_uid(uid):
     try:
-        print("this is id {}".format(id))
-        data = service_comments_collection.find_one({"serviceid": id})
-        print("this is data {}".format(data)) 
-        # for users in data:
-        data["_id"]= str(data["_id"])
-        return Response(response = json.dumps(data),status = 200,mimetype="application/json")
-    except Exception as e:
-            print("hitted exemption {}".format(e))
-            return Response(response=json.dumps({"message":"not found"}),status = 500,mimetype="application/json")
+        data = service_comments_collection.find_one({"business_uid": uid})
+        data["_id"] = str(data["_id"])
+
+        # Loop through the comments and fetch user details from user collection
+        for comment in data["comments"]:
+            user_id = comment["user_id"]
+            user_data = user_collection.find_one({"userid": user_id})
+            comment["username"] = user_data["username"]
+            comment["dp"] = user_data["dp"]
+
+        return Response(response=json.dumps(data), status=200, mimetype="application/json")
+    except:
+        return Response(response=json.dumps({"message": "Error fetching comments"}), status=500, mimetype="application/json")
+
 
 # -----------------------------
 
