@@ -423,22 +423,22 @@ def comments_uid(uid):
 @app.route('/addcomment', methods=['POST'])
 def add_comment():
     try:
-        serviceid = request.form['serviceid']
+        business_uid = request.form['business_uid']
         comment = request.form['comment']
         user_id = request.form['user_id']
-        name = request.form['name']
+        created_at = "2023-05-10T14:30:00Z"
 
         # Find document with matching serviceid
-        document = service_comments_collection.find_one({'serviceid': serviceid})
+        document = service_comments_collection.find_one({'business_uid': business_uid})
 
-        if document is not None:
-            document['comments'].append({'comment': comment, 'user_id': user_id})
-            service_comments_collection.update_one({'serviceid': serviceid}, {'$set': document})
+        # if document is not None:
+        document['comments'].append({'comment': comment, 'user_id': user_id, "created_at":created_at})
+        service_comments_collection.update_one({'business_uid': business_uid}, {'$set': document})
 
-        else: 
-            document = {'serviceid': serviceid,'name':name, 'comments': []}
-            document["comments"].append({"comment":comment,"user_id":user_id})
-            service_comments_collection.insert_one(document)
+        # else: 
+        #     document = {'serviceid': serviceid,'name':name, 'comments': []}
+        #     document["comments"].append({"comment":comment,"user_id":user_id})
+        #     service_comments_collection.insert_one(document)
 
         
 
