@@ -419,6 +419,7 @@ def comments_uid(uid):
 
 
 # -----------------------------
+# post comment
 
 @app.route('/addcomment', methods=['POST'])
 def add_comment():
@@ -431,15 +432,8 @@ def add_comment():
         # Find document with matching serviceid
         document = service_comments_collection.find_one({'business_uid': business_uid})
 
-        # if document is not None:
         document['comments'].append({'comment': comment, 'user_id': user_id, "created_at":created_at})
         service_comments_collection.update_one({'business_uid': business_uid}, {'$set': document})
-
-        # else: 
-        #     document = {'serviceid': serviceid,'name':name, 'comments': []}
-        #     document["comments"].append({"comment":comment,"user_id":user_id})
-        #     service_comments_collection.insert_one(document)
-
         
 
         return jsonify({'message': 'Comment added successfully.'}), 200
