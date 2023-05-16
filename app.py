@@ -404,18 +404,23 @@ def objid(objid):
 def comments_uid(uid):
     try:
         data = service_comments_collection.find_one({"business_uid": uid})
-        data["_id"] = str(data["_id"])
+        if data is None:
+            # Return an empty comments list if business_uid doesn't match
+            data = {"_id": "", "business_uid": uid, "comments": []}
+        else:
+            data["_id"] = str(data["_id"])
 
-        # Loop through the comments and fetch user details from user collection
-        for comment in data["comments"]:
-            user_id = comment["user_id"]
-            user_data = user_collection.find_one({"userid": user_id})
-            comment["username"] = user_data["username"]
-            comment["dp"] = user_data["dp"]
+            # Loop through the comments and fetch user details from user collection
+            for comment in data["comments"]:
+                user_id = comment["user_id"]
+                user_data = user_collection.find_one({"userid": user_id})
+                comment["username"] = user_data["username"]
+                comment["dp"] = user_data["dp"]
 
         return Response(response=json.dumps(data), status=200, mimetype="application/json")
     except:
         return Response(response=json.dumps({"message": "Error fetching comments"}), status=500, mimetype="application/json")
+
 
 
 # -----------------------------
@@ -527,15 +532,20 @@ def ask_community():
 
 ################ ask the community by id #####################  
 
-@app.route('/askcommunity/<uid>',methods=["GET"])
+@app.route('/askcommunity/<uid>', methods=["GET"])
 def ask_community_id(uid):
     try:
         data = askcommunity.find_one({"business_uid": uid})
-        data["_id"]= str(data["_id"])
-        return Response(response = json.dumps(data),status = 200,mimetype="application/json")
+        if data is None:
+            # Return an empty data list if business_uid doesn't match
+            data = {"_id": "no data", "business_uid": uid, "data": []}
+        else:
+            data["_id"] = str(data["_id"])
+        return Response(response=json.dumps(data), status=200, mimetype="application/json")
     except Exception as e:
-            print("hitted exemption {}".format(e))
-            return Response(response=json.dumps({"message":"not found"}),status = 500,mimetype="application/json")
+        print("hitted exemption {}".format(e))
+        return Response(response=json.dumps({"message": "not found"}), status=500, mimetype="application/json")
+
     
 
 
