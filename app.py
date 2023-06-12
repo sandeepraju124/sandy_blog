@@ -417,6 +417,28 @@ def comments_uid(uid):
                 comment["username"] = user_data["username"]
                 comment["dp"] = user_data["dp"]
 
+
+                # Calculate the ratings
+            rating_count = {
+                "5": 0,
+                "4": 0,
+                "3": 0,
+                "2": 0,
+                "1":0
+            }
+            total_rating = 0
+
+            for comment in data["comments"]:
+                rating = comment.get("rating")
+                if rating:
+                    total_rating += rating
+                    rating_count[str(rating)] += 1
+
+            data["rating_count"] = rating_count
+            data["overall_rating"] = total_rating / len(data["comments"]) if len(data["comments"]) > 0 else 0
+
+            # response_data = {"review": data,"rating_count": list(subcategories)}
+
         return Response(response=json.dumps(data), status=200, mimetype="application/json")
     except:
         return Response(response=json.dumps({"message": "Error fetching comments"}), status=500, mimetype="application/json")
