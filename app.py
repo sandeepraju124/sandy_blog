@@ -403,22 +403,23 @@ def objid(objid):
 @app.route("/commentsuid/<uid>", methods=["GET"])
 def comments_uid(uid):
     try:
-        print(uid)
         data = service_comments_collection.find_one({"business_uid": uid})
-        # print(data)
         if data is None:
-            print("1")
             # Return an empty comments list if business_uid doesn't match
-            data = {"_id": "", "business_uid": uid, "reviews": []}
-            print("2")
+            data = {"_id": "", "business_uid": uid, "reviews": [],"rating_count": {
+                    "5": 0,
+                    "4": 0,
+                    "3": 0,
+                    "2": 0,
+                    "1": 0
+                },
+                "overall_rating": 0 }
         else:
-            print("3")
             data["_id"] = str(data["_id"])
 
             # Loop through the comments and fetch user details from user collection
             for comment in data["reviews"]:
                 user_id = comment["user_id"]
-                print("4")
                 user_data = user_collection.find_one({"userid": user_id})
                 comment["username"] = user_data["username"]
                 comment["dp"] = user_data["dp"]
