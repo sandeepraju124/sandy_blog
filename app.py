@@ -403,16 +403,22 @@ def objid(objid):
 @app.route("/commentsuid/<uid>", methods=["GET"])
 def comments_uid(uid):
     try:
+        print(uid)
         data = service_comments_collection.find_one({"business_uid": uid})
+        # print(data)
         if data is None:
+            print("1")
             # Return an empty comments list if business_uid doesn't match
-            data = {"_id": "", "business_uid": uid, "comments": []}
+            data = {"_id": "", "business_uid": uid, "reviews": []}
+            print("2")
         else:
+            print("3")
             data["_id"] = str(data["_id"])
 
             # Loop through the comments and fetch user details from user collection
-            for comment in data["comments"]:
+            for comment in data["reviews"]:
                 user_id = comment["user_id"]
+                print("4")
                 user_data = user_collection.find_one({"userid": user_id})
                 comment["username"] = user_data["username"]
                 comment["dp"] = user_data["dp"]
@@ -424,20 +430,23 @@ def comments_uid(uid):
                 "4": 0,
                 "3": 0,
                 "2": 0,
-                "1":0
+                "1": 0
             }
             total_rating = 0
 
-            for comment in data["comments"]:
+            for comment in data["reviews"]:
                 rating = comment.get("rating")
                 if rating:
                     total_rating += rating
                     rating_count[str(rating)] += 1
 
             data["rating_count"] = rating_count
-            data["overall_rating"] = total_rating / len(data["comments"]) if len(data["comments"]) > 0 else 0
+            print("5")
+            data["overall_rating"] = total_rating / len(data["reviews"]) if len(data["reviews"]) > 0 else 0
 
             # response_data = {"review": data,"rating_count": list(subcategories)}
+            print(data)
+            print("data")
 
         return Response(response=json.dumps(data), status=200, mimetype="application/json")
     except:
