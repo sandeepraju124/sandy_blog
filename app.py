@@ -1,4 +1,3 @@
-import datetime
 from json import dumps
 import pymongo
 from flask import Flask, json, jsonify
@@ -6,6 +5,7 @@ from flask import render_template, request, Response
 from bson.objectid import ObjectId
 from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
 import time
+from datetime import datetime
 
 # client = pymongo.MongoClient("mongodb://127.0.0.1:27017/")
 client = pymongo.MongoClient("mongodb://grinding:cmBO7G8bOOt3ACN2HvfUc7ytN2XJBkaGKYMT5whwu0JvVKF8dKsStZTOrAAa67ImwCQQQ4XCIEgEACDbtopWGA==@grinding.mongo.cosmos.azure.com:10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@grinding@")
@@ -191,15 +191,6 @@ def user():
         return dumps({'id': str(result.inserted_id)})
 
 
-##########      GET only 1 user by providing username        #################
-
-# @app.route("/user/<username>",methods=["GET"])
-# def singleuser(username):
-#     data = user_collection.find_one({ "username": username})
-#     print(data)
-#     # for users in data:
-#     data["_id"]= str(data["_id"])
-#     return Response(response = json.dumps(data),status = 200,mimetype="application/json")
 
 ##########      GET only 1 user by providing user id        #################
 
@@ -218,33 +209,38 @@ def singleuserid(userid):
 
 ################ post user comment ######################
 
-@app.route("/postcomment",methods=["POST"])
+@app.route("/postcomment", methods=["POST"])
 def postcomment():
-    comment = request.form['comment']
-    user_id= request.form['user_id']
-    resname= request.form['resname']
-    # result = collection.update(
-    #     {'name': resname}, 
-    #     {"$set": {
-    #     "comments": {
-    #         "comment":comment,
-    #         "userid":userid}
-    #     }}
-    #     )
+    review = request.form['review']
+    user_id = request.form['user_id']
+    # resname = request.form['resname']
+    business_uid = request.form['business_uid']
 
     new_comment = {
-        "comment": comment,
-        "first_name": "John",
-        "id": 123,
-        "last_name": "Doe",
-        "user_id": user_id
+        "comment": review,
+        "user_id": user_id,
+        "created_at": datetime.now().isoformat()  # Use the current timestamp for created_at
     }
 
-    result = service_comments_collection.update_one(
-        {"name": resname},
-        {"$push": {"comments": new_comment}}
-    )
+    # Check if business_uid exists in the collection
+    existing_business = service_comments_collection.find_one({"business_uid": business_uid})
+
+    if existing_business:
+        # Update the reviews list in the existing business document
+        result = service_comments_collection.update_one(
+            {"business_uid": business_uid},
+            {"$push": {"reviews": new_comment}}
+        )
+    else:
+        # Create a new collection and insert the document
+        new_business = {
+            "business_uid": business_uid,
+            "reviews": [new_comment]
+        }
+        result = service_comments_collection.insert_one(new_business)
+
     return "done"
+
 
 
 ####################################################################
@@ -400,6 +396,7 @@ def objid(objid):
 ########################################################
 
 ################ get services comments by id ######################
+
 @app.route("/commentsuid/<uid>", methods=["GET"])
 def comments_uid(uid):
     try:
