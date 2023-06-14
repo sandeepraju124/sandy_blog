@@ -411,10 +411,6 @@ def comments_uid(uid):
             print("5")
             data["overall_rating"] = round(total_rating / len(data["reviews"]), 1) if len(data["reviews"]) > 0 else 0
 
-            # response_data = {"review": data,"rating_count": list(subcategories)}
-            print(data)
-            print("data")
-
         return Response(response=json.dumps(data), status=200, mimetype="application/json")
     except:
         return Response(response=json.dumps({"message": "Error fetching comments"}), status=500, mimetype="application/json")
