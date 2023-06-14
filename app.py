@@ -207,39 +207,8 @@ def singleuserid(userid):
             return Response(response=json.dumps({"message":"data not send"}),status = 500,mimetype="application/json")
 
 
-################ post user comment ######################
 
-@app.route("/postcomment", methods=["POST"])
-def postcomment():
-    review = request.form['review']
-    user_id = request.form['user_id']
-    # resname = request.form['resname']
-    business_uid = request.form['business_uid']
 
-    new_comment = {
-        "comment": review,
-        "user_id": user_id,
-        "created_at": datetime.now().isoformat()  # Use the current timestamp for created_at
-    }
-
-    # Check if business_uid exists in the collection
-    existing_business = service_comments_collection.find_one({"business_uid": business_uid})
-
-    if existing_business:
-        # Update the reviews list in the existing business document
-        result = service_comments_collection.update_one(
-            {"business_uid": business_uid},
-            {"$push": {"reviews": new_comment}}
-        )
-    else:
-        # Create a new collection and insert the document
-        new_business = {
-            "business_uid": business_uid,
-            "reviews": [new_comment]
-        }
-        result = service_comments_collection.insert_one(new_business)
-
-    return "done"
 
 
 
@@ -440,7 +409,7 @@ def comments_uid(uid):
 
             data["rating_count"] = rating_count
             print("5")
-            data["overall_rating"] = total_rating / len(data["reviews"]) if len(data["reviews"]) > 0 else 0
+            data["overall_rating"] = round(total_rating / len(data["reviews"]), 1) if len(data["reviews"]) > 0 else 0
 
             # response_data = {"review": data,"rating_count": list(subcategories)}
             print(data)
@@ -449,30 +418,47 @@ def comments_uid(uid):
         return Response(response=json.dumps(data), status=200, mimetype="application/json")
     except:
         return Response(response=json.dumps({"message": "Error fetching comments"}), status=500, mimetype="application/json")
+    
 
+################ post user comment ######################
 
-
-# -----------------------------
-# post comment
-
-@app.route('/addcomment', methods=['POST'])
-def add_comment():
+@app.route("/postcomment", methods=["POST"])
+def postcomment():
     try:
-        business_uid = request.form['business_uid']
-        comment = request.form['comment']
+        rating = request.form['rating']
+        review = request.form['review']
         user_id = request.form['user_id']
-        created_at = "2023-05-10T14:30:00Z"
+        business_uid = request.form['business_uid']
 
-        # Find document with matching serviceid
-        document = service_comments_collection.find_one({'business_uid': business_uid})
+        new_comment = {
+            "rating":rating,
+            "comment": review,
+            "user_id": user_id,
+            "created_at": datetime.now().isoformat()  # Use the current timestamp for created_at
+        }
 
-        document['comments'].append({'comment': comment, 'user_id': user_id, "created_at":created_at})
-        service_comments_collection.update_one({'business_uid': business_uid}, {'$set': document})
-        
+        # Check if business_uid exists in the collection
+        existing_business = service_comments_collection.find_one({"business_uid": business_uid})
 
-        return jsonify({'message': 'Comment added successfully.'}), 200
+        if existing_business:
+            # Update the reviews list in the existing business document
+            result = service_comments_collection.update_one(
+                {"business_uid": business_uid},
+                {"$push": {"reviews": new_comment}}
+            )
+        else:
+            # Create a new collection and insert the document
+            new_business = {
+                "business_uid": business_uid,
+                "reviews": [new_comment]
+            }
+            result = service_comments_collection.insert_one(new_business)
+
+        return "done"
+
     except Exception as e:
-        return jsonify({'message': f'Error adding comment: {str(e)}'}), 500
+        return str(e), 500  # Return the error message with a 500 status code
+
 
 
 
