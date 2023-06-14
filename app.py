@@ -421,7 +421,7 @@ def comments_uid(uid):
 @app.route("/postcomment", methods=["POST"])
 def postcomment():
     try:
-        rating = request.form['rating']
+        rating = int(request.form['rating'])
         review = request.form['review']
         user_id = request.form['user_id']
         business_uid = request.form['business_uid']
