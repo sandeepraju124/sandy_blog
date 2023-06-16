@@ -8,7 +8,7 @@ import time
 from datetime import datetime
 
 # client = pymongo.MongoClient("mongodb://127.0.0.1:27017/")
-client = pymongo.MongoClient("mongodb://grinding:cmBO7G8bOOt3ACN2HvfUc7ytN2XJBkaGKYMT5whwu0JvVKF8dKsStZTOrAAa67ImwCQQQ4XCIEgEACDbtopWGA==@grinding.mongo.cosmos.azure.com:10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@grinding@")
+client = pymongo.MongoClient("mongodb://axispowers-server:5rwkjNOI1mMtrWAd610dXI9k4PXLpke6ywr1WlsS4onJmnFwDQ8x5blqe5JJQ9wi2ja7fOHZpirYACDbkKXzYg==@axispowers-server.mongo.cosmos.azure.com:10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@axispowers-server@")
 db = client['sssv1']
 app = Flask(__name__)
 # db = client['sandeep']
