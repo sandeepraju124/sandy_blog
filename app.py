@@ -320,17 +320,41 @@ def category(category):
             return Response(response=json.dumps({"message":"not found"}),status = 500,mimetype="application/json")
     
 ################ get business by subcategory ######################
-@app.route("/subcategory/<subcategory>",methods=["GET"])
+from bson import ObjectId
+
+@app.route("/subcategory/<subcategory>", methods=["GET"])
 def subcategory(subcategory):
     try:
         data = list(services_collection.find({"sub_category": subcategory}))
-        for users in data:
-            users["_id"]= str(users["_id"])
-        return Response(response = json.dumps(data),status = 200,mimetype="application/json")
+        filtered_data = []
+        for user in data:
+            filtered_user = {
+                # here we have only taken selected fields ignoring _id, images, etc add below if you want to add extar fields
+                "business_name": user.get("business_name"),
+                "business_uid": str(user.get("business_uid")),  # Convert ObjectId to string
+                "contact_information": user.get("contact_information"),
+                "profile_image": user.get("profile_image"),
+                "latitude": user.get("longitude"),
+                "longitude": user.get("longitude"),
+                "business_description": user.get("business_description"),
+                "reviews_length": 0
+            }
+            uid = user.get("business_uid")
+            comment_data = service_comments_collection.find_one({"business_uid": uid})
+            if comment_data:
+                reviews = comment_data.get("reviews", [])
+                overall_rating = sum(review.get("rating", 0) for review in reviews) / len(reviews) if reviews else 0
+                overall_rating = round(overall_rating, 1)
+                filtered_user["reviews_length"] = len(reviews)
+            else:
+                overall_rating = 0
+            filtered_user["overall_rating"] = overall_rating
+            filtered_data.append(filtered_user)
+        return Response(response=json.dumps(filtered_data), status=200, mimetype="application/json")
     except Exception as e:
-            print("hitted exemption {}".format(e))
-            return Response(response=json.dumps({"message":"not found"}),status = 500,mimetype="application/json")
-    
+        print("hitted exemption {}".format(e))
+        return Response(response=json.dumps({"message": "not found"}), status=500, mimetype="application/json")
+
 
 ################ get business by uid ######################
 @app.route("/uid/<uid>",methods=["GET"])
