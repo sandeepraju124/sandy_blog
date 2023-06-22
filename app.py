@@ -1,11 +1,13 @@
 from json import dumps
+import os
 import pymongo
 from flask import Flask, json, jsonify
 from flask import render_template, request, Response
 from bson.objectid import ObjectId
-from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
+from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient, ContentSettings
 import time
 from datetime import datetime
+import uuid
 
 # client = pymongo.MongoClient("mongodb://127.0.0.1:27017/")
 client = pymongo.MongoClient("mongodb://battle-of-stalingrad:u5Zz811YjnbcJGfgXVxgmRJPtzYop4ZQkHExGH9V823s4XZ8keiaL4DF1BGE9hW5L5xpXrHkql3sACDbl5hj7Q==@battle-of-stalingrad.mongo.cosmos.azure.com:10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@battle-of-stalingrad@")
@@ -23,7 +25,7 @@ askcommunity = db.ask_community
 # azure storage details
 account_name = 'prometheus1137'
 account_key = 'QeCd4oED1ZKVaP0W9ncB7KYUv9qulmESzjb6NCpJQ/OMBlY8eWiSau+Jvu8AMfpV2ce31T6I9Hhy+AStf6oPkg=='
-container_name = 'sssv1'
+container_name = 'sss'
 timestamp = int(time.time() * 1000)
 print("time")
 print(int(time.time()))
@@ -154,18 +156,39 @@ def rescommentname(resname):
 @app.route("/user",methods=["GET","POST"])
 def user():
     if request.method=='GET':
-        print("hitted get in user")
+        # print("hitted get in user")
         data = list(user_collection.find())
         # print(data)
         for users in data:
             users["_id"]= str(users["_id"])
         return Response(response = json.dumps(data),status = 200,mimetype="application/json")
     elif request.method=='POST':
-        print("hitted post in user")
+        if "dp" not in request.files:
+            # print("if statement")
+            blob_url = 0
+        else:
+            # print("hitted post in user")
+            dp = request.files["dp"]
+
+            # Extract the file extension from the uploaded image
+            filename, ext = os.path.splitext(dp.filename)
+
+            blob_service_client = BlobServiceClient.from_connection_string("DefaultEndpointsProtocol=https;AccountName=mussolini;AccountKey=C/bpeOJzdZwixWwD04pWtGKnmu7Grb6JjL5jnuDBfxkiYvMwniDIr6gTD3CeZECkXQqFlAGx6+HR+AStQeh4fQ==;EndpointSuffix=core.windows.net")
+            container_client = blob_service_client.get_container_client("sss")
+            random_guid = str(uuid.uuid4())
+            blob_name = random_guid + ext
+            blob_client = container_client.get_blob_client(blob_name)
+            blob_client.upload_blob(dp, content_settings = ContentSettings(content_type="image/jpeg"))
+
+            #  blob_client.upload_blob(dp)
+            blob_url = blob_client.url 
+            print(blob_url)
+
+
         name = request.form['name']
         username = request.form['username']
         email = request.form["email"]
-        dp = request.form["dp"]
+        # dp = request.form["dp"]
         street = request.form['street']
         state = request.form['state']
         zipcode = request.form['zipcode']
@@ -176,7 +199,7 @@ def user():
                 'name':name, 
                 'username':username,
                 'email':email,
-                'dp':dp,
+                'dp':blob_url,
                 "zipcode":zipcode,
                 "address":{
                     "street":street,
@@ -188,7 +211,9 @@ def user():
                 },
                 "userid":userid
                 })
+
         return dumps({'id': str(result.inserted_id)})
+        # return Response(dumps({'id': str(result.inserted_id)}), headers=headers)
 
 
 
