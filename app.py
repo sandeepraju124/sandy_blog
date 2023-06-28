@@ -463,7 +463,7 @@ def subcategory(subcategory):
                 "business_uid": str(user.get("business_uid")),  # Convert ObjectId to string
                 "contact_information": user.get("contact_information"),
                 "profile_image": user.get("profile_image"),
-                "latitude": user.get("longitude"),
+                "latitude": user.get("latitude"),
                 "longitude": user.get("longitude"),
                 "business_description": user.get("business_description"),
                 "reviews_length": 0
