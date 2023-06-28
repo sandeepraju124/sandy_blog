@@ -149,6 +149,9 @@ def rescommentname(resname):
     data["_id"]= str(data["_id"])
     return Response(response = json.dumps(data),status = 200,mimetype="application/json")
 
+
+
+
 ####################################################################
 ##########      GET all user data        #################
 ####################################################################
@@ -230,6 +233,49 @@ def singleuserid(userid):
     except Exception as e:
             print("hitted exemption {}".format(e))
             return Response(response=json.dumps({"message":"data not send"}),status = 500,mimetype="application/json")
+
+
+
+//////////////////// edit user /////////////////////////////
+
+@app.route("/user/<userid>", methods=["PUT"])
+def edit_user(userid):
+    try:
+        # Check if the user exists
+        existing_user = user_collection.find_one({"userid": userid})
+        if existing_user is None:
+            return Response(response=json.dumps({"message": "User not found"}), status=404, mimetype="application/json")
+
+        # Get the updated data from the request
+        updated_data = request.get_json()
+
+        # Update the user's fields
+        if "name" in updated_data:
+            existing_user["name"] = updated_data["name"]
+        if "username" in updated_data:
+            existing_user["username"] = updated_data["username"]
+        if "email" in updated_data:
+            existing_user["email"] = updated_data["email"]
+        if "street" in updated_data:
+            existing_user["address"]["street"] = updated_data["street"]
+        if "state" in updated_data:
+            existing_user["address"]["state"] = updated_data["state"]
+        if "zipcode" in updated_data:
+            existing_user["zipcode"] = updated_data["zipcode"]
+        if "lat" in updated_data:
+            existing_user["address"]["geo"]["lat"] = updated_data["lat"]
+        if "lng" in updated_data:
+            existing_user["address"]["geo"]["lng"] = updated_data["lng"]
+
+        # Save the updated user
+        user_collection.update_one({"userid": userid}, {"$set": existing_user})
+
+        return Response(response=json.dumps({"message": "User updated successfully"}), status=200, mimetype="application/json")
+
+    except Exception as e:
+        print("Exception occurred: {}".format(e))
+        return Response(response=json.dumps({"message": "Failed to update user"}), status=500, mimetype="application/json")
+
 
 
 
