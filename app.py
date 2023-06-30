@@ -52,6 +52,13 @@ def home():
             return e
     return render_template('index.html')
 
+# terms and conditions screen
+
+@app.route('/termsandconditions', methods=['GET'])
+def tandc():
+    
+    return render_template('termconditions.html')
+
 
 
 ##########      GET  all the users        #################
