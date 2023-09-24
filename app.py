@@ -10,7 +10,7 @@ from datetime import datetime
 import uuid
 
 # client = pymongo.MongoClient("mongodb://127.0.0.1:27017/")
-client = pymongo.MongoClient("mongodb://peer:oOdX21tMm5wOwwghsfHcpxXyf7ooECmyPPHbf4eOocKSX1Ix7dyBw0hIfG0u5VhhyZKO5lBD7p2FACDbmoLNfw==@peer.mongo.cosmos.azure.com:10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@peer@")
+client = pymongo.MongoClient("mongodb://marcuse:lL9Hwunp7tWHMuKcX327cJNeQHeFNVCkCbjRdgxIFkVaHZj1qseKw4z4RiX24qeTXkXWhmPATmaUACDbPp5rHw==@marcuse.mongo.cosmos.azure.com:10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@marcuse@")
 db = client['sssv1']
 app = Flask(__name__)
 # db = client['sandeep']
