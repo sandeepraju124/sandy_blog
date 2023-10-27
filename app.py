@@ -718,24 +718,55 @@ def ask_community_id(uid):
         return Response(response=json.dumps({"message": "not found"}), status=500, mimetype="application/json")
 
 
-//////////////// post Ask community /////////////////////
-
-@app.route('/post_ask_community', methods=['POST'])
-def post_ask_community():
-    try:
-        # Get the question from the request's form data
-        question = request.form['question']
-        
-        if question:
-            # Store the question in memory (you should use a database in a real app)
-            questions.append(question)
-            return jsonify({'message': 'Question posted successfully'})
-        else:
-            return jsonify({'message': 'Question is required'}, 400)
-    except Exception as e:
-        return str(e), 500
+# //////////////// post Ask community /////////////////////
 
     
+@app.route('/post_question', methods=['POST'])
+def post_question():
+    try:
+        # Parse the request data
+        business_uid = request.form.get('business_uid')
+        question_text = request.form.get('question')
+        userid = request.form.get('userid')
+
+        if not business_uid or not question_text or not userid:
+            return jsonify({"error": "Missing required data"}), 400
+
+        # Find the document with the specified business_uid
+        business_data = askcommunity.find_one({"business_uid": business_uid})
+        print(business_data)
+
+        if business_data is None:
+            # If the business_uid doesn't exist, create a new document
+            new_document = {
+                "business_uid": business_uid,
+                "data": []
+            }
+            askcommunity.insert_one(new_document)
+            business_data = new_document
+
+        # Create a new question document
+        random_guid = str(uuid.uuid4())
+        new_question = {
+            "qdetails": {
+                "created_at": datetime.now().isoformat(),  # You can set the current timestamp here
+                "questionid": random_guid,  # Generate a unique question ID
+                "userid": userid,
+            },
+            "question": question_text,
+            "answers": []  # Initially, there are no answers for the new question
+        }
+
+        # Add the new question to the 'data' array in the document
+        business_data['data'].append(new_question)
+
+        # Update the document in the database
+        askcommunity.update_one({"_id": business_data["_id"]}, {"$set": business_data})
+
+        return jsonify({"message": "Question posted successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 
 
