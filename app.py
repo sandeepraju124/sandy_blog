@@ -717,6 +717,24 @@ def ask_community_id(uid):
         print("hitted exemption {}".format(e))
         return Response(response=json.dumps({"message": "not found"}), status=500, mimetype="application/json")
 
+
+//////////////// post Ask community /////////////////////
+
+@app.route('/post_ask_community', methods=['POST'])
+def post_ask_community():
+    try:
+        # Get the question from the request's form data
+        question = request.form['question']
+        
+        if question:
+            # Store the question in memory (you should use a database in a real app)
+            questions.append(question)
+            return jsonify({'message': 'Question posted successfully'})
+        else:
+            return jsonify({'message': 'Question is required'}, 400)
+    except Exception as e:
+        return str(e), 500
+
     
 
 
