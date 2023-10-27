@@ -718,7 +718,7 @@ def ask_community_id(uid):
         return Response(response=json.dumps({"message": "not found"}), status=500, mimetype="application/json")
 
 
-# //////////////// post Ask community /////////////////////
+# //////////////// post question Ask community /////////////////////
 
     
 @app.route('/post_question', methods=['POST'])
@@ -746,11 +746,11 @@ def post_question():
             business_data = new_document
 
         # Create a new question document
-        random_guid = str(uuid.uuid4())
+        question_id = str(uuid.uuid4().hex[:10])
         new_question = {
             "qdetails": {
                 "created_at": datetime.now().isoformat(),  # You can set the current timestamp here
-                "questionid": random_guid,  # Generate a unique question ID
+                "questionid": question_id,  # Generate a unique question ID
                 "userid": userid,
             },
             "question": question_text,
@@ -764,6 +764,47 @@ def post_question():
         askcommunity.update_one({"_id": business_data["_id"]}, {"$set": business_data})
 
         return jsonify({"message": "Question posted successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+    
+# //////////////// post answer Ask community /////////////////////
+
+@app.route('/post_answer', methods=['POST'])
+def post_answer():
+    try:
+        # Parse the request data
+        question_id = request.form.get('questionid')
+        answer_text = request.form.get('answer')
+        userid = request.form.get('userid')
+
+        if not question_id or not answer_text or not userid:
+            return jsonify({"error": "Missing required data"}), 400
+
+        # Find the document that contains the question with the specified question_id
+        business_data = askcommunity.find_one({"data.qdetails.questionid": question_id})
+
+        if business_data:
+            # Create a new answer document
+            new_answer = {
+                "adetails": {
+                    "created_at": datetime.now().isoformat(),  # Set the current timestamp here
+                    "userid": userid,
+                },
+                "answer": answer_text
+            }
+
+            # Add the new answer to the question's 'answers' array
+            for question in business_data['data']:
+                if question['qdetails']['questionid'] == question_id:
+                    question['answers'].append(new_answer)
+
+                    # Update the document in the database
+                    askcommunity.update_one({"_id": business_data["_id"]}, {"$set": business_data})
+
+                    return jsonify({"message": "Answer posted successfully"}), 200
+
+        return jsonify({"error": "Question not found"}), 404
 
     except Exception as e:
         return jsonify({"error": str(e)}), 400
