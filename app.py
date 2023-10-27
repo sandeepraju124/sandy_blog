@@ -703,19 +703,73 @@ def ask_community():
 
 ################ ask the community by id #####################  
 
-@app.route('/askcommunity/<uid>', methods=["GET"])
-def ask_community_id(uid):
+# @app.route('/askcommunity/<uid>', methods=["GET"])
+# def ask_community_id(uid):
+#     try:
+#         data = askcommunity.find_one({"business_uid": uid})
+#         if data is None:
+#             # Return an empty data list if business_uid doesn't match
+#             data = {"_id": "no data", "business_uid": uid, "data": []}
+
+#             print(data),
+#         else:
+#             data["_id"] = str(data["_id"])
+#         return Response(response=json.dumps(data), status=200, mimetype="application/json")
+#     except Exception as e:
+#         print("hitted exemption {}".format(e))
+#         return Response(response=json.dumps({"message": "not found"}), status=500, mimetype="application/json")
+
+
+
+
+# @app.route('/get_questions/<business_uid>', methods=['GET'])
+# def get_questions(business_uid):
+#     try:
+#         # Find the document with the specified business_uid
+#         business_data = askcommunity.find_one({"business_uid": business_uid})
+
+#         print(business_data)
+
+#         if business_data is None:
+#             return jsonify({"error": "Business not found"}), 404
+
+#         # Extract and return the list of questions for the specified business
+#         questions = business_data.get('data', [])
+
+#         return jsonify({"questions": questions}), 200
+
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 400
+@app.route('/get_questions/<business_uid>', methods=['GET'])
+def get_questions(business_uid):
     try:
-        data = askcommunity.find_one({"business_uid": uid})
-        if data is None:
-            # Return an empty data list if business_uid doesn't match
-            data = {"_id": "no data", "business_uid": uid, "data": []}
-        else:
-            data["_id"] = str(data["_id"])
-        return Response(response=json.dumps(data), status=200, mimetype="application/json")
+        # Find the document with the specified business_uid
+        business_data = askcommunity.find_one({"business_uid": business_uid})
+
+        if business_data is None:
+            return jsonify({"error": "Business not found"}), 404
+
+        # Extract and return the list of questions for the specified business
+        questions = business_data.get('data', [])
+
+        # Extract the 'created_at' timestamp and 'userid' for each question
+        formatted_questions = []
+        for question in questions:
+            created_at = question['qdetails'].get('created_at')
+            userid = question['qdetails'].get('userid')
+
+            formatted_question = {
+                "question": question["question"],
+                "created_at": created_at,
+                "userid": userid,
+            }
+
+            formatted_questions.append(formatted_question)
+
+        return jsonify({"questions": formatted_questions}), 200
+
     except Exception as e:
-        print("hitted exemption {}".format(e))
-        return Response(response=json.dumps({"message": "not found"}), status=500, mimetype="application/json")
+        return jsonify({"error": str(e)}), 400
 
 
 # //////////////// post Ask community /////////////////////
@@ -734,7 +788,7 @@ def post_question():
 
         # Find the document with the specified business_uid
         business_data = askcommunity.find_one({"business_uid": business_uid})
-        print(business_data)
+        # print(business_data)
 
         if business_data is None:
             # If the business_uid doesn't exist, create a new document
