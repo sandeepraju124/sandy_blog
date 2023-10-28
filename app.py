@@ -722,55 +722,6 @@ def ask_community():
 
 
 
-# @app.route('/get_questions/<business_uid>', methods=['GET'])
-# def get_questions(business_uid):
-#     try:
-#         # Find the document with the specified business_uid
-#         business_data = askcommunity.find_one({"business_uid": business_uid})
-
-#         print(business_data)
-
-#         if business_data is None:
-#             return jsonify({"error": "Business not found"}), 404
-
-#         # Extract and return the list of questions for the specified business
-#         questions = business_data.get('data', [])
-
-#         return jsonify({"questions": questions}), 200
-
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 400
-@app.route('/get_questions/<business_uid>', methods=['GET'])
-def get_questions(business_uid):
-    try:
-        # Find the document with the specified business_uid
-        business_data = askcommunity.find_one({"business_uid": business_uid})
-
-        if business_data is None:
-            return jsonify({"error": "Business not found"}), 404
-
-        # Extract and return the list of questions for the specified business
-        questions = business_data.get('data', [])
-
-        # Extract the 'created_at' timestamp and 'userid' for each question
-        formatted_questions = []
-        for question in questions:
-            created_at = question['qdetails'].get('created_at')
-            userid = question['qdetails'].get('userid')
-
-            formatted_question = {
-                "question": question["question"],
-                "created_at": created_at,
-                "userid": userid,
-            }
-
-            formatted_questions.append(formatted_question)
-
-        return jsonify({"questions": formatted_questions}), 200
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
-
 
 # //////////////// post Ask community /////////////////////
 
