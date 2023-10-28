@@ -710,6 +710,8 @@ def ask_community_id(uid):
         if data is None:
             # Return an empty data list if business_uid doesn't match
             data = {"_id": "no data", "business_uid": uid, "data": []}
+
+            print(data),
         else:
             data["_id"] = str(data["_id"])
         return Response(response=json.dumps(data), status=200, mimetype="application/json")
@@ -734,7 +736,7 @@ def post_question():
 
         # Find the document with the specified business_uid
         business_data = askcommunity.find_one({"business_uid": business_uid})
-        print(business_data)
+        # print(business_data)
 
         if business_data is None:
             # If the business_uid doesn't exist, create a new document
