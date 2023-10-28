@@ -703,21 +703,21 @@ def ask_community():
 
 ################ ask the community by id #####################  
 
-# @app.route('/askcommunity/<uid>', methods=["GET"])
-# def ask_community_id(uid):
-#     try:
-#         data = askcommunity.find_one({"business_uid": uid})
-#         if data is None:
-#             # Return an empty data list if business_uid doesn't match
-#             data = {"_id": "no data", "business_uid": uid, "data": []}
+@app.route('/askcommunity/<uid>', methods=["GET"])
+def ask_community_id(uid):
+    try:
+        data = askcommunity.find_one({"business_uid": uid})
+        if data is None:
+            # Return an empty data list if business_uid doesn't match
+            data = {"_id": "no data", "business_uid": uid, "data": []}
 
-#             print(data),
-#         else:
-#             data["_id"] = str(data["_id"])
-#         return Response(response=json.dumps(data), status=200, mimetype="application/json")
-#     except Exception as e:
-#         print("hitted exemption {}".format(e))
-#         return Response(response=json.dumps({"message": "not found"}), status=500, mimetype="application/json")
+            print(data),
+        else:
+            data["_id"] = str(data["_id"])
+        return Response(response=json.dumps(data), status=200, mimetype="application/json")
+    except Exception as e:
+        print("hitted exemption {}".format(e))
+        return Response(response=json.dumps({"message": "not found"}), status=500, mimetype="application/json")
 
 
 
