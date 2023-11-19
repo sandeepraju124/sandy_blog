@@ -134,16 +134,43 @@ def rescomments():
 
 ##########      GET only 1 restaurent by providing ID        #################
 
-@app.route("/serviceIdForComments/<id>",methods=["GET"])
-def rescommentIdForComments(id):
-    # data = service_comments_collection.find_one(ObjectId(id))
-    data = service_comments_collection.find_one({"serviceid": id})
-    if data is None:
-        return Response(response = json.dumps({"error":"comment not found"}),status=404,mimetype="application/json")
-    # print(data)
-    # for users in data:
-    data["_id"]= str(data["_id"])
-    return Response(response = json.dumps(data),status = 200,mimetype="application/json")
+# @app.route("/serviceIdForComments/<id>",methods=["GET"])
+# def rescommentIdForComments(id):
+#     # data = service_comments_collection.find_one(ObjectId(id))
+#     data = service_comments_collection.find_one({"serviceid": id})
+#     if data is None:
+#         return Response(response = json.dumps({"error":"comment not found"}),status=404,mimetype="application/json")
+#     # print(data)
+#     # for users in data:
+#     data["_id"]= str(data["_id"])
+#     return Response(response = json.dumps(data),status = 200,mimetype="application/json")
+
+# @app.route("/rescomments/<uid>", methods=["GET"])
+# def rescommentIdForComments(uid):
+#     # data = service_comments_collection.find_one(ObjectId(id))
+#     data = service_comments_collection.find_one({"serviceid": uid})
+#     if data is None:
+#         return Response(response=json.dumps({"error": "comment not found"}), status=404, mimetype="application/json")
+#     # print(data)
+#     # for users in data:
+#     data["_id"] = str(data["_id"])
+#     return Response(response=json.dumps(data), status=200, mimetype="application/json")
+
+@app.route('/rescomments/<uid>', methods=["GET"])
+def rescommentIdForComments(uid):
+    try:
+        data = service_comments_collection.find_one({"business_uid": uid})
+        if data is None:
+            # Return an empty data list if serviceid doesn't match
+            data = {"_id": "no data", "business_uid": uid, "data": []}
+        else:
+            data["_id"] = str(data["_id"])
+        return Response(response=json.dumps(data), status=200, mimetype="application/json")
+    except Exception as e:
+        print("Exception occurred: {}".format(e))
+        return Response(response=json.dumps({"message": "not found"}), status=500, mimetype="application/json")
+
+
 
 
 ##########      GET only 1 restaurent by providing restaurent name        #################
