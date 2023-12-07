@@ -792,7 +792,7 @@ def post_question():
         # Update the document in the database
         askcommunity.update_one({"_id": business_data["_id"]}, {"$set": business_data})
 
-        return jsonify({"message": "Question posted successfully"}), 200
+        return jsonify({"message": "Question posted successfully", "questionid": question_id}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 400
