@@ -10,7 +10,7 @@ from datetime import datetime
 import uuid
 
 # client = pymongo.MongoClient("mongodb://127.0.0.1:27017/")
-client = pymongo.MongoClient("mongodb://sai1:reZnQUCxGcOlvVCuUV5qalEMP7p0PT1oJGlpcfcrwjCBpuBUwrsGlEKcZdokfxdWGUJLvEz6KCtPACDbhCZ8nw==@sai1.mongo.cosmos.azure.com:10255/?ssl=true&retrywrites=false&replicaSet=globaldb&maxIdleTimeMS=120000&appName=@sai1@")
+client = pymongo.MongoClient("mongodb+srv://<SaiAdmin>:<Astrophile_da1137>@my-cluster.mongocluster.cosmos.azure.com/?tls=true&authMechanism=SCRAM-SHA-256&retrywrites=false&maxIdleTimeMS=120000")
 db = client['sssv1']
 app = Flask(__name__)
 # db = client['sandeep']
@@ -19,6 +19,7 @@ service_comments_collection = db.services_comments
 user_collection = db.users
 services_collection = db.services
 askcommunity = db.ask_community
+
 
 
 
@@ -367,6 +368,23 @@ def singleuserid(userid):
 #     except Exception as e:
 #         print("Exception occurred: {}".format(e))
 #         return Response(response=json.dumps({"message": "Failed to update user"}), status=500, mimetype="application/json")
+
+
+
+ #################### below is the endpoint for Search ######################### 
+
+@app.route('/search', methods=['GET'])
+def search():
+    try:
+        query = request.args.get("query")
+        # Use the $text operator for text search
+        data = list(service_comments_collection.find({"$text": {"$search": query}}))
+        for result in data:
+            result["_id"] = str(result["_id"])
+        return Response(response=json.dumps(data), status=200, mimetype="application/json")
+
+    except Exception as e:
+        return Response(response=json.dumps({"message": "Error in search"}), status=500, mimetype="application/json")
 
 
 
@@ -837,6 +855,16 @@ def post_answer():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+    
+
+
+
+
+    
+
+
+
+
 
 
 
