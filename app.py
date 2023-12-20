@@ -22,6 +22,11 @@ services_collection = db.services
 askcommunity = db.ask_community
 
 
+# Create a text index on the 'business_name' field (search) 
+### FYI: we don't neccessarily need to create a new collection for search we can retreive data from services_collection which as all the business details.
+services_collection.create_index([("business_name", pymongo.TEXT)])
+
+
 
 
 # azure storage details
@@ -371,20 +376,30 @@ def singleuserid(userid):
 #         return Response(response=json.dumps({"message": "Failed to update user"}), status=500, mimetype="application/json")
 
 
-
+####################################################################
  #################### below is the endpoint for Search ######################### 
+####################################################################
+        
 
 @app.route('/search', methods=['GET'])
 def search():
     try:
         query = request.args.get("query")
         # Use the $text operator for text search
-        data = list(service_comments_collection.find({"$text": {"$search": query}}))
+        data = list(services_collection.find({
+    "$text": {
+        "$search": query,
+        "$language": "english",
+        "$caseSensitive": False,
+       
+    }
+}))
         for result in data:
             result["_id"] = str(result["_id"])
         return Response(response=json.dumps(data), status=200, mimetype="application/json")
 
     except Exception as e:
+        # print(e)  # Print the exception
         return Response(response=json.dumps({"message": "Error in search"}), status=500, mimetype="application/json")
 
 
