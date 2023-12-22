@@ -22,17 +22,16 @@ services_collection = db.services
 askcommunity = db.ask_community
 
 
-
-
 # Create a text index on the 'business_name & etc' field (search) 
 # ## FYI: we don't neccessarily need to create a new collection for search we can retreive data from services_collection which as all the business details.
 services_collection.create_index([
     ("business_name", pymongo.TEXT),
     ("business_description", pymongo.TEXT),
     ("business_uid", pymongo.TEXT),
-    ("profile_image", pymongo.TEXT)
+    ("profile_image", pymongo.TEXT),
+    ("category", pymongo.TEXT),
+    ("sub_category", pymongo.TEXT)
 ])
-
 
 
 
