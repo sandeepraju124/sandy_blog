@@ -581,10 +581,63 @@ def objid(objid):
     except Exception as e:
             print("hitted exemption {}".format(e))
             return Response(response=json.dumps({"message":"not found"}),status = 500,mimetype="application/json")
+    
 
 
 
-# ____________________________________________________________________________________________________________________
+    
+
+########################################################
+################ user activity by userid #####################
+########################################################
+    
+
+@app.route('/user_activities/<user_id>', methods=['GET'])
+def get_user_activities(user_id):
+    try:
+        # Fetch user activities from different collections
+        comments = list(service_comments_collection.find({"reviews.user_id": user_id}))
+        questions = list(askcommunity.find({"data.qdetails.userid": user_id}))
+        all_answers = list(askcommunity.find({}))
+        print(services)
+
+        
+
+        # Fetch business data from services_collection
+        businesses = {document['business_uid']: document['business_name'] for document in services_collection.find({})}
+
+        # Process the fetched data to get user's activities
+        user_comments = [
+            {**review, 'business_uid': document['business_uid'], 'business_name': businesses.get(document['business_uid'])} 
+            for document in comments for review in document.get('reviews', []) 
+            if review.get('user_id') == user_id
+        ]
+        user_questions = [
+            {**item, 'business_uid': document['business_uid'], 'business_name': businesses.get(document['business_uid'])} 
+            for document in questions for item in document.get('data', []) 
+            if item.get('qdetails', {}).get('userid') == user_id
+        ]
+        user_answers = [
+            {**answer, 'business_uid': document['business_uid'], 'business_name': businesses.get(document['business_uid'])} 
+            for document in all_answers for item in document.get('data', []) 
+            for answer in item.get('answers', []) 
+            if answer.get('adetails', {}).get('userid') == user_id
+        ]
+
+        # Combine the activities
+        activities = {
+            "comments": user_comments,
+            "questions": user_questions,
+            "answers": user_answers
+        }
+
+        return jsonify(activities)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+
+# # ____________________________________________________________________________________________________________________
 # _____________________________________________________________________________________________________________________
 
 ########################################################
@@ -752,6 +805,8 @@ def upload_multiple_image():
 
     except Exception as e:
         return str(e), 500
+    
+
 
 ########################################################
 ################ ask the community #####################
