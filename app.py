@@ -11,7 +11,7 @@ import uuid
 
 
 # client = pymongo.MongoClient("mongodb://127.0.0.1:27017/")
-client = pymongo.MongoClient("mongodb+srv://sAdmin:Astrophile_da1137@sr1.mongocluster.cosmos.azure.com/?tls=true&authMechanism=SCRAM-SHA-256&retrywrites=false&maxIdleTimeMS=120000")
+client = pymongo.MongoClient("mongodb+srv://sAdmin:Astrophile_da0515@sr1.mongocluster.cosmos.azure.com/?tls=true&authMechanism=SCRAM-SHA-256&retrywrites=false&maxIdleTimeMS=120000")
 db = client['sssv1']
 app = Flask(__name__)
 # db = client['sandeep']
@@ -599,9 +599,7 @@ def get_user_activities(user_id):
         comments = list(service_comments_collection.find({"reviews.user_id": user_id}))
         questions = list(askcommunity.find({"data.qdetails.userid": user_id}))
         all_answers = list(askcommunity.find({}))
-        print(services)
-
-        
+        # print(services)
 
         # Fetch business data from services_collection
         businesses = {document['business_uid']: document['business_name'] for document in services_collection.find({})}
@@ -635,10 +633,6 @@ def get_user_activities(user_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
-
-# # ____________________________________________________________________________________________________________________
-# _____________________________________________________________________________________________________________________
 
 ########################################################
 ################ comment section #####################
