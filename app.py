@@ -22,6 +22,7 @@ services_collection = db.services
 askcommunity = db.ask_community
 
 
+
 # Create a text index on the 'business_name & etc' field (search) 
 # ## FYI: we don't neccessarily need to create a new collection for search we can retreive data from services_collection which as all the business details.
 services_collection.create_index([
@@ -387,32 +388,61 @@ def singleuserid(userid):
 ####################################################################
         
 
+# @app.route('/search', methods=['GET'])
+# def search():
+#     try:
+#         query = request.args.get("query")
+#         # Use the $text operator for text search
+#         data = list(services_collection.find({
+#     "$text": {
+#         "$search": query,
+#         "$language": "english",
+#         "$caseSensitive": False,
+       
+#     }
+# }))
+#         for result in data:
+#             result["_id"] = str(result["_id"])
+#         return Response(response=json.dumps(data), status=200, mimetype="application/json")
+
+#     except Exception as e:
+#         # print(e)  # Print the exception
+#         return Response(response=json.dumps({"message": "Error in search"}), status=500, mimetype="application/json")
 @app.route('/search', methods=['GET'])
 def search():
     try:
         query = request.args.get("query")
         # Use the $text operator for text search
-        data = list(services_collection.find({
-    "$text": {
-        "$search": query,
-        "$language": "english",
-        "$caseSensitive": False,
-       
-    }
-}))
-        for result in data:
+        services_data = list(services_collection.find({
+            "$text": {
+                "$search": query,
+                "$language": "english",
+                "$caseSensitive": False,
+            }
+        }))
+
+        # Calculate the average rating for each service and include location
+        for service in services_data:
+            service_id = service['business_uid']
+            comments = list(service_comments_collection.find({"business_uid": service_id}))
+            # Extract ratings from the nested 'reviews' field
+            ratings = [review['rating'] for comment in comments for review in comment.get('reviews', []) if 'rating' in review]
+            if ratings:
+                average_rating = sum(ratings) / len(ratings)
+                service['average_rating'] = round(average_rating, 1)
+            else:
+                service['average_rating'] = 0  # No ratings available
+            # Include the location field from the service document
+            service['country'] = service.get('country')
+
+        for result in services_data:
             result["_id"] = str(result["_id"])
-        return Response(response=json.dumps(data), status=200, mimetype="application/json")
+
+        return Response(response=json.dumps(services_data), status=200, mimetype="application/json")
 
     except Exception as e:
-        # print(e)  # Print the exception
+        print(f"Search error: {e}")  # Debug print
         return Response(response=json.dumps({"message": "Error in search"}), status=500, mimetype="application/json")
-
-
-
-
-
-
 
 
 ####################################################################
