@@ -8,10 +8,12 @@ from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient, C
 import time
 from datetime import datetime
 import uuid
+import psycopg2
 
 
 # client = pymongo.MongoClient("mongodb://127.0.0.1:27017/")
-client = pymongo.MongoClient("mongodb+srv://sAdmin:Astrophile_da0515@sr1.mongocluster.cosmos.azure.com/?tls=true&authMechanism=SCRAM-SHA-256&retrywrites=false&maxIdleTimeMS=120000")
+# client = pymongo.MongoClient("mongodb+srv://sAdmin:Astrophile_da0515@sr1.mongocluster.cosmos.azure.com/?tls=true&authMechanism=SCRAM-SHA-256&retrywrites=false&maxIdleTimeMS=120000")
+client = pymongo.MongoClient("mongodb://sr2:RDbkYdz71xf7JNWS1xVsPhWB3L1jTBdfDTBe5HscwUHqHusxC5qpbTRFsJIdtoTmls1Zwldu27mPACDb2VEnzQ==@sr2.mongo.cosmos.azure.com:10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@sr2@")
 db = client['sssv1']
 app = Flask(__name__)
 # db = client['sandeep']
@@ -23,16 +25,18 @@ askcommunity = db.ask_community
 
 
 
+
+
 # Create a text index on the 'business_name & etc' field (search) 
 # ## FYI: we don't neccessarily need to create a new collection for search we can retreive data from services_collection which as all the business details.
-services_collection.create_index([
-    ("business_name", pymongo.TEXT),
-    ("business_description", pymongo.TEXT),
-    ("business_uid", pymongo.TEXT),
-    ("profile_image", pymongo.TEXT),
-    ("category", pymongo.TEXT),
-    ("sub_category", pymongo.TEXT)
-])
+# services_collection.create_index([
+#     ("business_name", pymongo.TEXT),
+#     ("business_description", pymongo.TEXT),
+#     ("business_uid", pymongo.TEXT),
+#     ("profile_image", pymongo.TEXT),
+#     ("category", pymongo.TEXT),
+#     ("sub_category", pymongo.TEXT)
+# ])
 
 
 
@@ -965,9 +969,111 @@ def post_answer():
 
 
 
+######################################################
+    # POSTGRESS REST APIS
+######################################################
+    
+
+def execute_query(query, params=None):
+
+    db_config = {
+        'host': 'c-azurepgsr.hb3cckwevo3lco.postgres.cosmos.azure.com',
+        'port': '5432',
+        'database': 'postgres',
+        'user': 'citus',
+        'password': 'S@n9912277968'
+    }
+    try:
+        connection = psycopg2.connect(**db_config)
+        cursor = connection.cursor()
+
+        # Execute the query with optional parameters
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        print(rows)
+        column_names = [desc[0] for desc in cursor.description]
+        print(column_names)
+        cursor.close()
+        connection.close()
+        result = [dict(zip(column_names, row)) for row in rows]
+
+
+        return result
+    except Exception as e:
+        raise e
 
 
 
+# @app.route('/pg/business/<category>', methods=['GET'])
+# def get_data_cat(category):
+#     try:
+#         # Connect to the PostgreSQL database
+#         connection = connect_to_database()
+
+#         # Create a cursor object to execute SQL queries
+#         cursor = connection.cursor()
+
+#         # Example query: Replace 'your_table' with the actual table name
+#         query = "SELECT * FROM business WHERE category = '{}';".format(category)
+#         cursor.execute(query)
+
+#         # Fetch all rows from the result set
+#         rows = cursor.fetchall()
+#         print(rows)
+#         column_names = [desc[0] for desc in cursor.description]
+#         print(column_names)
+
+#         # Close the cursor and connection
+#         cursor.close()
+#         connection.close()
+
+#         result = [dict(zip(column_names, row)) for row in rows]
+#         print(result)
+
+#         # Convert the result to a list of dictionaries for JSON response
+#         # result = [{'id': row[0], 'name': row[1]} for row in rows]
+
+#         # return jsonify(result)
+#         return jsonify(result)
+
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
+    
+
+# Endpoint to retrieve all data from the 'business' table
+@app.route('/pg/business', methods=['GET'])
+def get_business():
+    try:
+        query = "SELECT * FROM business;"
+        result = execute_query(query)
+        return jsonify(result)
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+
+@app.route('/pg/business/where', methods=['GET'])
+def get_category():
+    try:
+        base_query = "SELECT * FROM business WHERE"
+        filters = request.args
+        print(f"filters {filters.values()}") #ImmutableMultiDict([('category', 'food')])
+        where_clause = " AND ".join([f"{key} = %s" for key in filters.keys()]) # category = %s
+        print(f"where_clause {where_clause}")
+        full_query = f"{base_query} {where_clause};" if where_clause else f"{base_query} {full_query}"
+        result = execute_query(full_query, tuple(filters.values()))
+
+
+        # query = "SELECT * FROM business WHERE category = '{}';".format(category)
+        # result = execute_query(query)
+        return jsonify(result)
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+######################################################
+# |||||||   POSTGRESS REST APIS  |||||||||||
+######################################################
 
 if __name__ == '__main__':
     app.run(debug=True)
