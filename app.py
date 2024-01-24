@@ -8,7 +8,6 @@ from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient, C
 import time
 from datetime import datetime
 import uuid
-# import pytz
 import psycopg2
 
 
@@ -29,15 +28,15 @@ askcommunity = db.ask_community
 
 
 # Create a text index on the 'business_name & etc' field (search) 
-## FYI: we don't neccessarily need to create a new collection for search we can retreive data from services_collection which as all the business details.
-services_collection.create_index([
-    ("business_name", pymongo.TEXT),
-    ("business_description", pymongo.TEXT),
-    ("business_uid", pymongo.TEXT),
-    ("profile_image", pymongo.TEXT),
-    ("category", pymongo.TEXT),
-    ("sub_category", pymongo.TEXT)
-])
+# ## FYI: we don't neccessarily need to create a new collection for search we can retreive data from services_collection which as all the business details.
+# services_collection.create_index([
+#     ("business_name", pymongo.TEXT),
+#     ("business_description", pymongo.TEXT),
+#     ("business_uid", pymongo.TEXT),
+#     ("profile_image", pymongo.TEXT),
+#     ("category", pymongo.TEXT),
+#     ("sub_category", pymongo.TEXT)
+# ])
 
 
 
@@ -347,51 +346,72 @@ def singleuserid(userid):
 
 # //////////////////// edit user /////////////////////////////
 
-@app.route("/edituser/<userid>", methods=["PUT"])
-def edit_user(userid):
-    try:
-        # Check if the user exists
-        existing_user = user_collection.find_one({"userid": userid})
-        print(existing_user)
-        if existing_user is None:
-            return Response(response=json.dumps({"message": "User not found"}), status=404, mimetype="application/json")
+# @app.route("/edituser/<userid>", methods=["PUT"])
+# def edit_user(userid):
+#     try:
+#         # Check if the user exists
+#         existing_user = user_collection.find_one({"userid": userid})
+#         print(existing_user)
+#         if existing_user is None:
+#             return Response(response=json.dumps({"message": "User not found"}), status=404, mimetype="application/json")
 
-        # Get the updated data from the request
-        updated_data = request.get_json()
-        print(updated_data)
+#         # Get the updated data from the request
+#         updated_data = request.get_json()
+#         print(updated_data)
 
-        # Update the user's fields
-        if "name" in updated_data:
-            existing_user["name"] = updated_data["name"]
-        if "username" in updated_data:
-            existing_user["username"] = updated_data["username"]
-        if "email" in updated_data:
-            existing_user["email"] = updated_data["email"]
-        if "street" in updated_data:
-            existing_user["address"]["street"] = updated_data["street"]
-        if "state" in updated_data:
-            existing_user["address"]["state"] = updated_data["state"]
-        if "zipcode" in updated_data:
-            existing_user["zipcode"] = updated_data["zipcode"]
-        if "lat" in updated_data:
-            existing_user["address"]["geo"]["lat"] = updated_data["lat"]
-        if "lng" in updated_data:
-            existing_user["address"]["geo"]["lng"] = updated_data["lng"]
+#         # Update the user's fields
+#         if "name" in updated_data:
+#             existing_user["name"] = updated_data["name"]
+#         if "username" in updated_data:
+#             existing_user["username"] = updated_data["username"]
+#         if "email" in updated_data:
+#             existing_user["email"] = updated_data["email"]
+#         if "street" in updated_data:
+#             existing_user["address"]["street"] = updated_data["street"]
+#         if "state" in updated_data:
+#             existing_user["address"]["state"] = updated_data["state"]
+#         if "zipcode" in updated_data:
+#             existing_user["zipcode"] = updated_data["zipcode"]
+#         if "lat" in updated_data:
+#             existing_user["address"]["geo"]["lat"] = updated_data["lat"]
+#         if "lng" in updated_data:
+#             existing_user["address"]["geo"]["lng"] = updated_data["lng"]
 
-        # Save the updated user
-        user_collection.update_one({"userid": userid}, {"$set": existing_user})
+#         # Save the updated user
+#         user_collection.update_one({"userid": userid}, {"$set": existing_user})
 
-        return Response(response=json.dumps({"message": "User updated successfully"}), status=200, mimetype="application/json")
+#         return Response(response=json.dumps({"message": "User updated successfully"}), status=200, mimetype="application/json")
 
-    except Exception as e:
-        print("Exception occurred: {}".format(e))
-        return Response(response=json.dumps({"message": "Failed to update user"}), status=500, mimetype="application/json")
+#     except Exception as e:
+#         print("Exception occurred: {}".format(e))
+#         return Response(response=json.dumps({"message": "Failed to update user"}), status=500, mimetype="application/json")
 
 
 ####################################################################
  #################### below is the endpoint for Search ######################### 
 ####################################################################
+        
+
+# @app.route('/search', methods=['GET'])
+# def search():
+#     try:
+#         query = request.args.get("query")
+#         # Use the $text operator for text search
+#         data = list(services_collection.find({
+#     "$text": {
+#         "$search": query,
+#         "$language": "english",
+#         "$caseSensitive": False,
        
+#     }
+# }))
+#         for result in data:
+#             result["_id"] = str(result["_id"])
+#         return Response(response=json.dumps(data), status=200, mimetype="application/json")
+
+#     except Exception as e:
+#         # print(e)  # Print the exception
+#         return Response(response=json.dumps({"message": "Error in search"}), status=500, mimetype="application/json")
 @app.route('/search', methods=['GET'])
 def search():
     try:
@@ -653,32 +673,33 @@ def get_user_activities(user_id):
 ########################################################
 
 ################ get services comments by id ######################
+
 @app.route("/commentsuid/<uid>", methods=["GET"])
 def comments_uid(uid):
     try:
         data = service_comments_collection.find_one({"business_uid": uid})
         if data is None:
             # Return an empty comments list if business_uid doesn't match
-            data = {"_id": "", "business_uid": uid, "reviews": [], "rating_count": {
-                "5": 0,
-                "4": 0,
-                "3": 0,
-                "2": 0,
-                "1": 0
-            },
-            "overall_rating": 0 }
+            data = {"_id": "", "business_uid": uid, "reviews": [],"rating_count": {
+                    "5": 0,
+                    "4": 0,
+                    "3": 0,
+                    "2": 0,
+                    "1": 0
+                },
+                "overall_rating": 0 }
         else:
             data["_id"] = str(data["_id"])
 
             # Loop through the comments and fetch user details from user collection
-            for comment in data.get("reviews", []):
-                user_id = comment.get("user_id")
+            for comment in data["reviews"]:
+                user_id = comment["user_id"]
                 user_data = user_collection.find_one({"userid": user_id})
-                if user_data:
-                    comment["username"] = user_data.get("username", "Unknown User")
-                    comment["dp"] = user_data.get("dp", "")
+                comment["username"] = user_data["username"]
+                comment["dp"] = user_data["dp"]
 
-            # Calculate the ratings
+
+                # Calculate the ratings
             rating_count = {
                 "5": 0,
                 "4": 0,
@@ -688,57 +709,22 @@ def comments_uid(uid):
             }
             total_rating = 0
 
-            for comment in data.get("reviews", []):
+            for comment in data["reviews"]:
                 rating = comment.get("rating")
                 if rating:
                     total_rating += rating
                     rating_count[str(rating)] += 1
 
             data["rating_count"] = rating_count
-            data["overall_rating"] = round(total_rating / len(data["reviews"]), 1) if data["reviews"] else 0
+            print("5")
+            data["overall_rating"] = round(total_rating / len(data["reviews"]), 1) if len(data["reviews"]) > 0 else 0
 
         return Response(response=json.dumps(data), status=200, mimetype="application/json")
-    except Exception as e:
+    except:
         return Response(response=json.dumps({"message": "Error fetching comments"}), status=500, mimetype="application/json")
+    
 
 ################ post user comment ######################
-
-# @app.route("/postcomment", methods=["POST"])
-# def postcomment():
-#     try:
-#         rating = int(request.form['rating'])
-#         review = request.form['review']
-#         user_id = request.form['user_id']
-#         business_uid = request.form['business_uid']
-
-#         new_comment = {
-#             "rating":rating,
-#             "comment": review,
-#             "user_id": user_id,
-#             "created_at": datetime.now().isoformat()  # Use the current timestamp for created_at
-#         }
-
-#         # Check if business_uid exists in the collection
-#         existing_business = service_comments_collection.find_one({"business_uid": business_uid})
-
-#         if existing_business:
-#             # Update the reviews list in the existing business document
-#             result = service_comments_collection.update_one(
-#                 {"business_uid": business_uid},
-#                 {"$push": {"reviews": new_comment}}
-#             )
-#         else:
-#             # Create a new collection and insert the document
-#             new_business = {
-#                 "business_uid": business_uid,
-#                 "reviews": [new_comment]
-#             }
-#             result = service_comments_collection.insert_one(new_business)
-
-#         return "done"
-
-#     except Exception as e:
-#         return str(e), 500  # Return the error message with a 500 status code
 
 @app.route("/postcomment", methods=["POST"])
 def postcomment():
@@ -748,21 +734,11 @@ def postcomment():
         user_id = request.form['user_id']
         business_uid = request.form['business_uid']
 
-        # Fetch the username from the user_collection
-        user_data = user_collection.find_one({"userid": user_id})
-        username = user_data["username"] if user_data else "Unknown User"
-        
-        # Set the timezone to 'Asia/Kolkata' for Indian Standard Time
-        # timezone = pytz.timezone('Asia/Kolkata')
-        # current_time = datetime.now(timezone).isoformat()
-
-
         new_comment = {
-            "rating": rating,
+            "rating":rating,
             "comment": review,
             "user_id": user_id,
-            "username": username,  # Add the username here
-            "created_at": datetime.now().isoformat(), # Use the current timestamp with IST timezone
+            "created_at": datetime.now().isoformat()  # Use the current timestamp for created_at
         }
 
         # Check if business_uid exists in the collection
@@ -770,7 +746,7 @@ def postcomment():
 
         if existing_business:
             # Update the reviews list in the existing business document
-            service_comments_collection.update_one(
+            result = service_comments_collection.update_one(
                 {"business_uid": business_uid},
                 {"$push": {"reviews": new_comment}}
             )
@@ -780,7 +756,7 @@ def postcomment():
                 "business_uid": business_uid,
                 "reviews": [new_comment]
             }
-            service_comments_collection.insert_one(new_business)
+            result = service_comments_collection.insert_one(new_business)
 
         return "done"
 
