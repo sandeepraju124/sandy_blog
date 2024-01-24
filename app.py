@@ -9,7 +9,7 @@ import time
 from datetime import datetime
 import uuid
 import pytz
-# import psycopg2
+import psycopg2
 
 
 # client = pymongo.MongoClient("mongodb://127.0.0.1:27017/")
@@ -29,15 +29,15 @@ askcommunity = db.ask_community
 
 
 # Create a text index on the 'business_name & etc' field (search) 
-# ## FYI: we don't neccessarily need to create a new collection for search we can retreive data from services_collection which as all the business details.
-# services_collection.create_index([
-#     ("business_name", pymongo.TEXT),
-#     ("business_description", pymongo.TEXT),
-#     ("business_uid", pymongo.TEXT),
-#     ("profile_image", pymongo.TEXT),
-#     ("category", pymongo.TEXT),
-#     ("sub_category", pymongo.TEXT)
-# ])
+## FYI: we don't neccessarily need to create a new collection for search we can retreive data from services_collection which as all the business details.
+services_collection.create_index([
+    ("business_name", pymongo.TEXT),
+    ("business_description", pymongo.TEXT),
+    ("business_uid", pymongo.TEXT),
+    ("profile_image", pymongo.TEXT),
+    ("category", pymongo.TEXT),
+    ("sub_category", pymongo.TEXT)
+])
 
 
 
@@ -347,72 +347,51 @@ def singleuserid(userid):
 
 # //////////////////// edit user /////////////////////////////
 
-# @app.route("/edituser/<userid>", methods=["PUT"])
-# def edit_user(userid):
-#     try:
-#         # Check if the user exists
-#         existing_user = user_collection.find_one({"userid": userid})
-#         print(existing_user)
-#         if existing_user is None:
-#             return Response(response=json.dumps({"message": "User not found"}), status=404, mimetype="application/json")
+@app.route("/edituser/<userid>", methods=["PUT"])
+def edit_user(userid):
+    try:
+        # Check if the user exists
+        existing_user = user_collection.find_one({"userid": userid})
+        print(existing_user)
+        if existing_user is None:
+            return Response(response=json.dumps({"message": "User not found"}), status=404, mimetype="application/json")
 
-#         # Get the updated data from the request
-#         updated_data = request.get_json()
-#         print(updated_data)
+        # Get the updated data from the request
+        updated_data = request.get_json()
+        print(updated_data)
 
-#         # Update the user's fields
-#         if "name" in updated_data:
-#             existing_user["name"] = updated_data["name"]
-#         if "username" in updated_data:
-#             existing_user["username"] = updated_data["username"]
-#         if "email" in updated_data:
-#             existing_user["email"] = updated_data["email"]
-#         if "street" in updated_data:
-#             existing_user["address"]["street"] = updated_data["street"]
-#         if "state" in updated_data:
-#             existing_user["address"]["state"] = updated_data["state"]
-#         if "zipcode" in updated_data:
-#             existing_user["zipcode"] = updated_data["zipcode"]
-#         if "lat" in updated_data:
-#             existing_user["address"]["geo"]["lat"] = updated_data["lat"]
-#         if "lng" in updated_data:
-#             existing_user["address"]["geo"]["lng"] = updated_data["lng"]
+        # Update the user's fields
+        if "name" in updated_data:
+            existing_user["name"] = updated_data["name"]
+        if "username" in updated_data:
+            existing_user["username"] = updated_data["username"]
+        if "email" in updated_data:
+            existing_user["email"] = updated_data["email"]
+        if "street" in updated_data:
+            existing_user["address"]["street"] = updated_data["street"]
+        if "state" in updated_data:
+            existing_user["address"]["state"] = updated_data["state"]
+        if "zipcode" in updated_data:
+            existing_user["zipcode"] = updated_data["zipcode"]
+        if "lat" in updated_data:
+            existing_user["address"]["geo"]["lat"] = updated_data["lat"]
+        if "lng" in updated_data:
+            existing_user["address"]["geo"]["lng"] = updated_data["lng"]
 
-#         # Save the updated user
-#         user_collection.update_one({"userid": userid}, {"$set": existing_user})
+        # Save the updated user
+        user_collection.update_one({"userid": userid}, {"$set": existing_user})
 
-#         return Response(response=json.dumps({"message": "User updated successfully"}), status=200, mimetype="application/json")
+        return Response(response=json.dumps({"message": "User updated successfully"}), status=200, mimetype="application/json")
 
-#     except Exception as e:
-#         print("Exception occurred: {}".format(e))
-#         return Response(response=json.dumps({"message": "Failed to update user"}), status=500, mimetype="application/json")
+    except Exception as e:
+        print("Exception occurred: {}".format(e))
+        return Response(response=json.dumps({"message": "Failed to update user"}), status=500, mimetype="application/json")
 
 
 ####################################################################
  #################### below is the endpoint for Search ######################### 
 ####################################################################
-        
-
-# @app.route('/search', methods=['GET'])
-# def search():
-#     try:
-#         query = request.args.get("query")
-#         # Use the $text operator for text search
-#         data = list(services_collection.find({
-#     "$text": {
-#         "$search": query,
-#         "$language": "english",
-#         "$caseSensitive": False,
        
-#     }
-# }))
-#         for result in data:
-#             result["_id"] = str(result["_id"])
-#         return Response(response=json.dumps(data), status=200, mimetype="application/json")
-
-#     except Exception as e:
-#         # print(e)  # Print the exception
-#         return Response(response=json.dumps({"message": "Error in search"}), status=500, mimetype="application/json")
 @app.route('/search', methods=['GET'])
 def search():
     try:
