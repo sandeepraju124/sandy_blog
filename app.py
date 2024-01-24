@@ -8,7 +8,7 @@ from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient, C
 import time
 from datetime import datetime
 import uuid
-import pytz
+# import pytz
 import psycopg2
 
 
@@ -753,8 +753,8 @@ def postcomment():
         username = user_data["username"] if user_data else "Unknown User"
         
         # Set the timezone to 'Asia/Kolkata' for Indian Standard Time
-        timezone = pytz.timezone('Asia/Kolkata')
-        current_time = datetime.now(timezone).isoformat()
+        # timezone = pytz.timezone('Asia/Kolkata')
+        # current_time = datetime.now(timezone).isoformat()
 
 
         new_comment = {
@@ -762,7 +762,7 @@ def postcomment():
             "comment": review,
             "user_id": user_id,
             "username": username,  # Add the username here
-            "created_at": current_time  # Use the current timestamp with IST timezone
+            "created_at": datetime.now().isoformat(), # Use the current timestamp with IST timezone
         }
 
         # Check if business_uid exists in the collection
