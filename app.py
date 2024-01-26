@@ -1048,43 +1048,6 @@ def execute_query(query, params=None):
         raise e
 
 
-
-# @app.route('/pg/business/<category>', methods=['GET'])
-# def get_data_cat(category):
-#     try:
-#         # Connect to the PostgreSQL database
-#         connection = connect_to_database()
-
-#         # Create a cursor object to execute SQL queries
-#         cursor = connection.cursor()
-
-#         # Example query: Replace 'your_table' with the actual table name
-#         query = "SELECT * FROM business WHERE category = '{}';".format(category)
-#         cursor.execute(query)
-
-#         # Fetch all rows from the result set
-#         rows = cursor.fetchall()
-#         print(rows)
-#         column_names = [desc[0] for desc in cursor.description]
-#         print(column_names)
-
-#         # Close the cursor and connection
-#         cursor.close()
-#         connection.close()
-
-#         result = [dict(zip(column_names, row)) for row in rows]
-#         print(result)
-
-#         # Convert the result to a list of dictionaries for JSON response
-#         # result = [{'id': row[0], 'name': row[1]} for row in rows]
-
-#         # return jsonify(result)
-#         return jsonify(result)
-
-#     except Exception as e:
-#         return jsonify({'error': str(e)}), 500
-    
-
 # Endpoint to retrieve all data from the 'business' table
 @app.route('/pg/business', methods=['GET'])
 def get_business():
@@ -1097,6 +1060,7 @@ def get_business():
         return jsonify({'error': str(e)}), 500
     
 
+# Endpoint to retrieve filter data by passing params
 @app.route('/pg/business/where', methods=['GET'])
 def get_category():
     try:
@@ -1115,6 +1079,38 @@ def get_category():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+
+@app.route('/pg/business/house-data', methods=['GET'])
+def get_house_data():
+    try:
+        # Use all query parameters directly
+        query_params = request.args.to_dict()
+
+
+        # Define the SQL query
+        # WHERE {' AND '.join([f"house.{key} = %s" for key in query_params])}
+            # WHERE {' AND '.join([f"house.{key} = %s" for key in query_params])}
+        query = f"""
+            SELECT *
+            FROM house
+            JOIN business ON house.business_uid = business.business_uid
+            WHERE {' AND '.join([f"house.{key} = %s" for key in query_params])}
+            
+        """
+
+
+            
+        # Execute the query with parameters
+        result = execute_query(query, list(query_params.values()))
+
+        # Return the data as JSON
+        return jsonify(result)
+
+    except Exception as e:
+        # Handle errors
+        print(f"Error: {e}")
+        return jsonify({'error': 'Failed to retrieve house data'})
 
 ######################################################
 # |||||||   POSTGRESS REST APIS  |||||||||||
