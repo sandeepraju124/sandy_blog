@@ -393,26 +393,6 @@ def singleuserid(userid):
 ####################################################################
         
 
-# @app.route('/search', methods=['GET'])
-# def search():
-#     try:
-#         query = request.args.get("query")
-#         # Use the $text operator for text search
-#         data = list(services_collection.find({
-#     "$text": {
-#         "$search": query,
-#         "$language": "english",
-#         "$caseSensitive": False,
-       
-#     }
-# }))
-#         for result in data:
-#             result["_id"] = str(result["_id"])
-#         return Response(response=json.dumps(data), status=200, mimetype="application/json")
-
-#     except Exception as e:
-#         # print(e)  # Print the exception
-#         return Response(response=json.dumps({"message": "Error in search"}), status=500, mimetype="application/json")
 @app.route('/search', methods=['GET'])
 def search():
     try:
@@ -724,43 +704,6 @@ def comments_uid(uid):
 
 ################ post user comment ######################
 
-# @app.route("/postcomment", methods=["POST"])
-# def postcomment():
-#     try:
-#         rating = int(request.form['rating'])
-#         review = request.form['review']
-#         user_id = request.form['user_id']
-#         business_uid = request.form['business_uid']
-
-#         new_comment = {
-#             "rating":rating,
-#             "comment": review,
-#             "user_id": user_id,
-#             "created_at": datetime.now().isoformat()  # Use the current timestamp for created_at
-#         }
-
-#         # Check if business_uid exists in the collection
-#         existing_business = service_comments_collection.find_one({"business_uid": business_uid})
-
-#         if existing_business:
-#             # Update the reviews list in the existing business document
-#             result = service_comments_collection.update_one(
-#                 {"business_uid": business_uid},
-#                 {"$push": {"reviews": new_comment}}
-#             )
-#         else:
-#             # Create a new collection and insert the document
-#             new_business = {
-#                 "business_uid": business_uid,
-#                 "reviews": [new_comment]
-#             }
-#             result = service_comments_collection.insert_one(new_business)
-
-#         return "done"
-
-#     except Exception as e:
-#         return str(e), 500  # Return the error message with a 500 status code
-
 @app.route("/postcomment", methods=["POST"])
 def postcomment():
     try:
@@ -777,13 +720,16 @@ def postcomment():
         timezone = pytz.timezone('Asia/Kolkata')
         current_time = datetime.now(timezone).isoformat()
 
+        # Generate a unique review_id
+        review_id = str(uuid.uuid4())
 
         new_comment = {
+            "review_id": review_id,  # Include the review_id here
             "rating": rating,
             "comment": review,
             "user_id": user_id,
-            "username": username,  # Add the username here
-            "created_at": current_time  # Use the current timestamp with IST timezone
+            "username": username,
+            "created_at": current_time
         }
 
         # Check if business_uid exists in the collection
@@ -808,6 +754,87 @@ def postcomment():
     except Exception as e:
         return str(e), 500  # Return the error message with a 500 status code
 
+
+
+ ################### Edit comment Endpoint ##################
+    
+@app.route("/editcomment", methods=["PUT"])
+def edit_comment():
+    try:
+        business_uid = request.form['business_uid']
+        review_id = request.form['review_id']
+        user_id = request.form['user_id']  # Assuming the user_id is sent in the request
+        new_rating = int(request.form['rating'])
+        new_review = request.form['review']
+        
+        # Fetch the specific review to check if the user_id matches
+        review = service_comments_collection.find_one(
+            {"business_uid": business_uid, "reviews.review_id": review_id},
+            {"reviews.$": 1}
+        )
+
+          # Set the timezone to 'Asia/Kolkata' for Indian Standard Time
+        timezone = pytz.timezone('Asia/Kolkata')
+        current_time = datetime.now(timezone).isoformat()
+
+        
+        # If the review exists and the user_id matches, proceed with the update
+        if review and review.get('reviews', [{}])[0].get('user_id') == user_id:
+            # Update the specific review in the business document using the $ positional operator
+            result = service_comments_collection.update_one(
+                {"business_uid": business_uid, "reviews.review_id": review_id},
+                {"$set": {
+                    "reviews.$.rating": new_rating, 
+                    "reviews.$.comment": new_review,
+                    "reviews.$.updated_at": current_time  # Add the current timestamp
+                }}
+            )
+            
+            if result.matched_count == 0:
+                return jsonify({"error": "Business or review not found"}), 404
+            
+            return jsonify({"message": "Review updated successfully"}), 200
+        else:
+            return jsonify({"error": "Unauthorized or review not found"}), 403
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+
+####################### Delete Comment Endpoint  ###########################
+
+
+@app.route("/deletecomment", methods=["DELETE"])
+def delete_comment():
+    try:
+        business_uid = request.form['business_uid']
+        review_id = request.form['review_id']
+        user_id = request.form['user_id']  # Assuming the user_id is sent in the request
+
+        # Fetch the specific review to check if the user_id matches
+        review = service_comments_collection.find_one(
+            {"business_uid": business_uid, "reviews.review_id": review_id},
+            {"reviews.$": 1}
+        )
+
+        # If the review exists and the user_id matches, proceed with the deletion
+        if review and review.get('reviews', [{}])[0].get('user_id') == user_id:
+            # Delete the specific review from the business document
+            result = service_comments_collection.update_one(
+                {"business_uid": business_uid},
+                {"$pull": {"reviews": {"review_id": review_id}}}
+            )
+
+            if result.modified_count == 0:
+                return jsonify({"error": "Review not found or could not be deleted"}), 404
+
+            return jsonify({"message": "Review deleted successfully"}), 200
+        else:
+            return jsonify({"error": "Unauthorized or review not found"}), 403
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 
 
 
@@ -965,6 +992,90 @@ def post_question():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
     
+
+
+
+######################## Below Edit question endpoint ##########
+@app.route('/edit_question', methods=['PUT'])
+def edit_question():
+    try:
+        # Parse the request data
+        business_uid = request.form.get('business_uid')
+        question_id = request.form.get('questionid')
+        new_question_text = request.form.get('new_question')
+        userid = request.form.get('userid')  # The ID of the user attempting to edit the question
+
+        if not business_uid or not question_id or not new_question_text or not userid:
+            return jsonify({"error": "Missing required data"}), 400
+
+        # Find the document with the specified business_uid
+        business_data = askcommunity.find_one({"business_uid": business_uid})
+
+        if business_data is None:
+            return jsonify({"error": "Business data not found"}), 404
+
+        # Check if the question exists and if the userid matches
+        question_found = False
+        for question in business_data['data']:
+            if question['qdetails']['questionid'] == question_id and question['qdetails']['userid'] == userid:
+                question_found = True
+                question['question'] = new_question_text
+                # Update the updated_at timestamp for the question
+                question['qdetails']['updated_at'] = datetime.now().isoformat()
+                break
+
+        if not question_found:
+            return jsonify({"error": "Question not found or unauthorized"}), 403
+
+        # Update the document in the database
+        askcommunity.update_one({"_id": business_data["_id"]}, {"$set": business_data})
+
+        return jsonify({"message": "Question updated successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+    ################## Below delete question Endpoint #################
+@app.route('/delete_question', methods=['DELETE'])
+def delete_question():
+    try:
+        # Parse the request data
+        question_id = request.form.get('questionid')
+        userid = request.form.get('userid')
+        business_uid = request.form.get('business_uid')  # Get business_uid from the request
+
+        if not question_id or not userid or not business_uid:  # Check for business_uid as well
+            return jsonify({"error": "Missing required data"}), 400
+
+        # Find the document that contains the question with the specified question_id and business_uid
+        business_data = askcommunity.find_one({"business_uid": business_uid, "data.qdetails.questionid": question_id})
+
+        if business_data:
+            # Check if the question exists and if the userid matches
+            question_found = False
+            for question in business_data['data']:
+                if question['qdetails']['questionid'] == question_id and question['qdetails']['userid'] == userid:
+                    question_found = True
+                    # Remove the question from the 'data' array
+                    business_data['data'].remove(question)
+                    break
+
+            if not question_found:
+                return jsonify({"error": "Question not found or unauthorized"}), 403
+
+            # Update the document in the database
+            askcommunity.update_one({"_id": business_data["_id"]}, {"$set": business_data})
+
+            return jsonify({"message": "Question deleted successfully"}), 200
+        else:
+            return jsonify({"error": "Question not found"}), 404
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+    
 # //////////////// post answer Ask community /////////////////////
 
 @app.route('/post_answer', methods=['POST'])
@@ -982,11 +1093,15 @@ def post_answer():
         business_data = askcommunity.find_one({"data.qdetails.questionid": question_id})
 
         if business_data:
+            # Generate a unique answer ID and take the first 10 digits
+            answer_id = str(uuid.uuid4().hex)[:10]
+
             # Create a new answer document
             new_answer = {
                 "adetails": {
                     "created_at": datetime.now().isoformat(),  # Set the current timestamp here
                     "userid": userid,
+                    "answerid": answer_id,  # Include the answer ID here
                 },
                 "answer": answer_text
             }
@@ -1005,6 +1120,72 @@ def post_answer():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+    
+
+
+########### Endpoint for Edit_Answer ########
+    
+@app.route('/edit_answer', methods=['PUT'])
+def edit_answer():
+    try:
+        business_uid = request.form.get('business_uid')  
+        question_id = request.form.get('questionid')
+        answer_id = request.form.get('answerid')
+        new_answer_text = request.form.get('new_answer')
+        userid = request.form.get('userid')
+
+        if not business_uid or not question_id or not answer_id or not new_answer_text or not userid: 
+            return jsonify({"error": "Missing required data"}), 400
+
+        business_data = askcommunity.find_one({"business_uid": business_uid, "data.qdetails.questionid": question_id})  
+
+        if business_data:
+            for question in business_data['data']:
+                if question['qdetails']['questionid'] == question_id:
+                    for answer in question['answers']:
+                        if answer['adetails']['answerid'] == answer_id and answer['adetails']['userid'] == userid:
+                            answer['answer'] = new_answer_text
+                            # Update the updated_at timestamp for the answer
+                            answer['adetails']['updated_at'] = datetime.now().isoformat()
+                            askcommunity.update_one({"_id": business_data["_id"]}, {"$set": business_data})
+                            return jsonify({"message": "Answer updated successfully"}), 200
+            return jsonify({"error": "Answer not found or unauthorized"}), 403
+        else:
+            return jsonify({"error": "Question not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+
+
+######## Endpoint for Delete_Answer #########
+    
+@app.route('/delete_answer', methods=['DELETE'])
+def delete_answer():
+    try:
+        business_uid = request.form.get('business_uid')
+        question_id = request.form.get('questionid')
+        answer_id = request.form.get('answerid')
+        userid = request.form.get('userid')
+
+        if not business_uid or not question_id or not answer_id or not userid:  
+            return jsonify({"error": "Missing required data"}), 400
+
+        business_data = askcommunity.find_one({"business_uid": business_uid, "data.qdetails.questionid": question_id})  
+
+
+        if business_data:
+            for question in business_data['data']:
+                if question['qdetails']['questionid'] == question_id:
+                    for answer in question['answers']:
+                        if answer['adetails']['answerid'] == answer_id and answer['adetails']['userid'] == userid:
+                            question['answers'].remove(answer)
+                            askcommunity.update_one({"_id": business_data["_id"]}, {"$set": business_data})
+                            return jsonify({"message": "Answer deleted successfully"}), 200
+            return jsonify({"error": "Answer not found or unauthorized"}), 403
+        else:
+            return jsonify({"error": "Question not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     
 
 
