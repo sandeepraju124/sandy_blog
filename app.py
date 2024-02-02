@@ -1203,11 +1203,11 @@ def delete_answer():
 def execute_query(query, params=None):
 
     db_config = {
-        'host': 'c-azurepgsr.hb3cckwevo3lco.postgres.cosmos.azure.com',
+        'host': 'postgres.cdmy8mee4s8m.us-east-1.rds.amazonaws.com',
         'port': '5432',
         'database': 'postgres',
-        'user': 'citus',
-        'password': 'S@n9912277968'
+        'user': 'postgres',
+        'password': '9912277968'
     }
     try:
         connection = psycopg2.connect(**db_config)
