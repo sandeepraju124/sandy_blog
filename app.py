@@ -1282,6 +1282,43 @@ def get_house_data():
         print(f"Error: {e}")
         return jsonify({'error': 'Failed to retrieve house data'})
 
+
+
+# get data based on lat and lang
+
+@app.route('/pg/business/latlong',methods=['GET'])
+def businessforlatlong():
+    latitude = float(request.args.get('latitude'))
+    longitude = float(request.args.get('longitude'))
+    kmrange = float(request.args.get('kmrange'))
+    # print(type(latitude))
+    # print(longitude)
+
+    # query = """
+    # SELECT *
+    # FROM business
+    # WHERE ST_DWithin(
+    #     ST_GeographyFromText('POINT(17.49494 78.399734)'),
+    #     geography(ST_MakePoint(business.longitude, business.latitude)),
+    #     2000
+    # );
+    # """
+    query = """
+    SELECT *
+    FROM business
+    WHERE ST_DWithin(
+        ST_GeographyFromText('POINT(%s %s)'),
+        geography(ST_MakePoint(business.longitude, business.latitude)),
+        %s
+    );
+    """
+
+    # result = execute_query(query)
+    result = execute_query(query, (latitude, longitude, kmrange))
+    print(result)
+    print("result")
+    return jsonify(result)
+
 ######################################################
 # |||||||   POSTGRESS REST APIS  |||||||||||
 ######################################################
