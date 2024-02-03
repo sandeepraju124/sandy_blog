@@ -1290,19 +1290,12 @@ def get_house_data():
 def businessforlatlong():
     latitude = float(request.args.get('latitude'))
     longitude = float(request.args.get('longitude'))
-    kmrange = float(request.args.get('kmrange'))
-    # print(type(latitude))
-    # print(longitude)
+    distance = request.args.get('distance')
+    key = request.args.get('key')
+    value = request.args.get('value')
+    # print(latitude)
+    # print(key)
 
-    # query = """
-    # SELECT *
-    # FROM business
-    # WHERE ST_DWithin(
-    #     ST_GeographyFromText('POINT(17.49494 78.399734)'),
-    #     geography(ST_MakePoint(business.longitude, business.latitude)),
-    #     2000
-    # );
-    # """
     query = """
     SELECT *
     FROM business
@@ -1310,13 +1303,30 @@ def businessforlatlong():
         ST_GeographyFromText('POINT(%s %s)'),
         geography(ST_MakePoint(business.longitude, business.latitude)),
         %s
-    );
+    )
     """
 
-    # result = execute_query(query)
-    result = execute_query(query, (latitude, longitude, kmrange))
-    print(result)
-    print("result")
+    if key and value:
+        query += f"AND business.{key} = %s"
+
+    # Execute the query
+    result = execute_query(query, (latitude, longitude, distance, value) if key and value else (latitude, longitude, distance))
+
+
+
+    # query = f"""
+    # SELECT *
+    # FROM business
+    # WHERE ST_DWithin(
+    #     ST_GeographyFromText('POINT(%s %s)'),
+    #     geography(ST_MakePoint(business.longitude, business.latitude)),
+    #     %s
+    # ) And business.{key} = %s
+    # """
+
+    # result = execute_query(query, (latitude, longitude, distance,value))
+    # print(result)
+    # print("result")
     return jsonify(result)
 
 ######################################################
