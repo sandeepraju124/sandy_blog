@@ -1190,7 +1190,7 @@ def delete_answer():
     
 
 def execute_query(query, params=None):
-
+    print("called execute_query")
     db_config = {
         'host': 'postgres.cdmy8mee4s8m.us-east-1.rds.amazonaws.com',
         'port': '5432',
@@ -1199,19 +1199,27 @@ def execute_query(query, params=None):
         'password': '9912277968'
     }
     try:
+        print("try")
         connection = psycopg2.connect(**db_config)
         cursor = connection.cursor()
 
         # Execute the query with optional parameters
         cursor.execute(query, params)
+        if any(keyword in query.strip().upper() for keyword in ["INSERT", "UPDATE", "DELETE"]):
+            # For INSERT queries, commit the transaction and return None
+            connection.commit()
+            row_count = cursor.rowcount
+            print(f"Rows affected: {row_count}")
+            cursor.close()
+            connection.close()
+            return row_count
+        
         rows = cursor.fetchall()
-        print(rows)
         column_names = [desc[0] for desc in cursor.description]
         print(column_names)
         cursor.close()
         connection.close()
         result = [dict(zip(column_names, row)) for row in rows]
-
 
         return result
     except Exception as e:
@@ -1219,15 +1227,49 @@ def execute_query(query, params=None):
 
 
 # Endpoint to retrieve all data from the 'business' table
-@app.route('/pg/business', methods=['GET'])
+@app.route('/pg/business', methods=['GET','POST','PATCH'])
 def get_business():
-    try:
-        query = "SELECT * FROM business;"
-        result = execute_query(query)
-        return jsonify(result)
+    if request.method == 'GET':
+        try:
+            query = "SELECT * FROM business;"
+            result = execute_query(query)
+            return jsonify(result)
 
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+        
+    elif request.method == 'POST':
+        try:
+            data = request.json 
+            print(data)  # Print the received data to debug
+            keys = ', '.join(data.keys())
+            values = ', '.join(['%s' for _ in range(len(data))])
+            insert_query = f"INSERT INTO business ({keys}) VALUES ({values})"
+            print(insert_query)
+            execute_query(insert_query, tuple(data.values()))  # Execute the insert query
+            return jsonify({'message': 'Business added successfully'})
+        
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+        
+    elif request.method == 'PATCH':
+        print("in patch")
+        try:
+            data = request.json
+            business_uid = data['business_uid']
+            set_clause = ', '.join([f"{key} = %s" for key in data.keys()])
+            query = f"UPDATE business SET {set_clause} WHERE business_uid = %s"
+            params = tuple(data.values()) + (business_uid,)
+            result = execute_query(query, params)
+            # print(result)
+            # print("result")
+            if result is not None:
+                return jsonify({'message': 'Business updated successfully'})
+            else:
+                return jsonify({'error': 'Failed to update business'}), 500
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+        
     
 
 # Endpoint to retrieve filter data by passing params
@@ -1249,6 +1291,8 @@ def get_category():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
     
 
 @app.route('/pg/business/house-data', methods=['GET'])
