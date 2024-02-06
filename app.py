@@ -1270,7 +1270,40 @@ def get_business():
         except Exception as e:
             return jsonify({'error': str(e)}), 500
         
-    
+# ////////////////////////// testing above methpost method to upload image as well ////////////////
+
+def upload_to_azure(file):
+    connection_string = "your_azure_storage_connection_string"
+    container_name = "slytherinsafestorage"
+    blob_name = str(uuid.uuid4()) + os.path.splitext(file.filename)[-1]  # Generate a unique blob name
+    blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+    blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+    blob_client.upload_blob(file)
+    return blob_client.url
+
+
+
+@app.route("/testingdataimageupdate",methods = ['POST'])
+def testingdataimageupdate():
+    try:
+        data = request.form()
+        file = request.files.get("profileimage")
+        file_url = upload_to_azure(file)
+        data['profileimage_url'] = file_url
+        keys = ', '.join(data.keys())
+        values = ', '.join(['%s' for _ in range(len(data))])
+        insert_query = f"INSERT INTO business ({keys}) VALUES ({values})"
+        execute_query(insert_query, tuple(data.values()))  # Execute the insert query
+
+        return jsonify({'message': 'Business added successfully'})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+
+
+# ////////////////////////// testing above methpost method to upload image as well ////////////////
 
 # Endpoint to retrieve filter data by passing params
 @app.route('/pg/business/where', methods=['GET'])
