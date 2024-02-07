@@ -431,76 +431,76 @@ def services():
         except:
             return Response(response = json.dumps({"message":"no data available"}),status = 500,mimetype="application/json")
         
-    if request.method=='POST':
-        try:
-            business_name = request.form['business_name']
-            business_description = request.form['business_description']
-            contact_information = request.form['contact_information']
-            country = request.form['country']
-            category = request.form['category']
-            sub_category = request.form['sub_category']
-            latitude = request.form['latitude']
-            longitude = request.form['longitude']
-            profile_image = request.files['profile_image']
+    # if request.method=='POST':
+    #     try:
+    #         business_name = request.form['business_name']
+    #         business_description = request.form['business_description']
+    #         contact_information = request.form['contact_information']
+    #         country = request.form['country']
+    #         category = request.form['category']
+    #         sub_category = request.form['sub_category']
+    #         latitude = request.form['latitude']
+    #         longitude = request.form['longitude']
+    #         profile_image = request.files['profile_image']
 
 
-            service_fields = {}
-            blob_urls = []
+    #         service_fields = {}
+    #         blob_urls = []
 
-            if business_name:
-                service_fields["business_name"] = business_name
-            if business_description:
-                service_fields["business_description"] = business_description
-            if contact_information:
-                service_fields["contact_information"] = contact_information
-            if country:
-                service_fields["country"] = country
-            if category:
-                service_fields["category"] = category
-            if sub_category:
-                service_fields["sub_category"] = sub_category
-            if latitude:
-                service_fields["latitude"] = latitude
-            if longitude:
-                service_fields["longitude"] = longitude
+    #         if business_name:
+    #             service_fields["business_name"] = business_name
+    #         if business_description:
+    #             service_fields["business_description"] = business_description
+    #         if contact_information:
+    #             service_fields["contact_information"] = contact_information
+    #         if country:
+    #             service_fields["country"] = country
+    #         if category:
+    #             service_fields["category"] = category
+    #         if sub_category:
+    #             service_fields["sub_category"] = sub_category
+    #         if latitude:
+    #             service_fields["latitude"] = latitude
+    #         if longitude:
+    #             service_fields["longitude"] = longitude
 
-            if 'profile_image' in request.files:
-                profile_image = request.files['profile_image']
-                filename = profile_image.filename
-                print("filename")
-                print(filename)
-                print(timestamp)
-                blob_name = str(timestamp) + '_' + filename
-                blob_client = container_client.get_blob_client(blob_name)
-                blob_client.upload_blob(profile_image.read())
-                blob_url = blob_client.url
-                service_fields["profile_image"] = blob_url
-
-
+    #         if 'profile_image' in request.files:
+    #             profile_image = request.files['profile_image']
+    #             filename = profile_image.filename
+    #             print("filename")
+    #             print(filename)
+    #             print(timestamp)
+    #             blob_name = str(timestamp) + '_' + filename
+    #             blob_client = container_client.get_blob_client(blob_name)
+    #             blob_client.upload_blob(profile_image.read())
+    #             blob_url = blob_client.url
+    #             service_fields["profile_image"] = blob_url
 
 
-            if 'images' in request.files:
-                for file in request.files.getlist('images'):
-                    filename = file.filename
-                    file_extension = filename.split('.')[-1]
-                    blob_name = str(timestamp) + '_' + filename
-                    blob_client = container_client.get_blob_client(blob_name)
-
-                    blob_client.upload_blob(file.read())
-                    blob_urls.append(blob_client.url)
-
-            service_fields["images"] = blob_urls
-            # if sub_catagory:
-            #     service_fields["images"] = sub_catagory
 
 
-            services_collection.insert_one(service_fields)
-            print("blob_urls {}".format(blob_urls))
+    #         if 'images' in request.files:
+    #             for file in request.files.getlist('images'):
+    #                 filename = file.filename
+    #                 file_extension = filename.split('.')[-1]
+    #                 blob_name = str(timestamp) + '_' + filename
+    #                 blob_client = container_client.get_blob_client(blob_name)
 
-            return jsonify({'message': 'Service added successfully.'}), 200
+    #                 blob_client.upload_blob(file.read())
+    #                 blob_urls.append(blob_client.url)
+
+    #         service_fields["images"] = blob_urls
+    #         # if sub_catagory:
+    #         #     service_fields["images"] = sub_catagory
+
+
+    #         services_collection.insert_one(service_fields)
+    #         print("blob_urls {}".format(blob_urls))
+
+    #         return jsonify({'message': 'Service added successfully.'}), 200
     
-        except Exception as e:
-            return  jsonify({'message': f'Error adding service: {str(e)}'}), 500
+        # except Exception as e:
+        #     return  jsonify({'message': f'Error adding service: {str(e)}'}), 500
 
 # -----------------------------------------------------------------------
 #       depcricated below api and implemented same for postgres
@@ -1272,24 +1272,27 @@ def get_business():
         
 # ////////////////////////// testing above methpost method to upload image as well ////////////////
 
-def upload_to_azure(file):
-    connection_string = "your_azure_storage_connection_string"
+def upload_to_azure(file,business_uid):
+    connection_string = "DefaultEndpointsProtocol=https;AccountName=chambersafe;AccountKey=LU8ZPmbxH6yALstQxEDxCaoPfS3VEWut06bqEOdwxRiukEm7sgQOkLPflx++XGEwOuSnYlvwo1G5+ASt8lszfA==;EndpointSuffix=core.windows.net"
     container_name = "slytherinsafestorage"
-    blob_name = str(uuid.uuid4()) + os.path.splitext(file.filename)[-1]  # Generate a unique blob name
+    blob_name =  business_uid + "-"+  str(uuid.uuid4())+ os.path.splitext(file.filename)[-1]  # Generate a unique blob name
+    print(blob_name)
     blob_service_client = BlobServiceClient.from_connection_string(connection_string)
     blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
     blob_client.upload_blob(file)
     return blob_client.url
-
+ 
 
 
 @app.route("/testingdataimageupdate",methods = ['POST'])
 def testingdataimageupdate():
     try:
-        data = request.form()
-        file = request.files.get("profileimage")
-        file_url = upload_to_azure(file)
-        data['profileimage_url'] = file_url
+        data = request.form.to_dict()  # Convert ImmutableMultiDict to a mutable dictionary
+        # print(data["business_uid"])
+        business_uid = data["business_uid"]
+        file = request.files.get("profile_image_url")
+        file_url = upload_to_azure(file,business_uid)
+        data['profile_image_url'] = file_url
         keys = ', '.join(data.keys())
         values = ', '.join(['%s' for _ in range(len(data))])
         insert_query = f"INSERT INTO business ({keys}) VALUES ({values})"
