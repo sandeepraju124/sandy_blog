@@ -1226,6 +1226,17 @@ def execute_query(query, params=None):
         raise e
 
 
+def upload_to_azure(file,business_uid):
+    connection_string = "DefaultEndpointsProtocol=https;AccountName=chambersafe;AccountKey=LU8ZPmbxH6yALstQxEDxCaoPfS3VEWut06bqEOdwxRiukEm7sgQOkLPflx++XGEwOuSnYlvwo1G5+ASt8lszfA==;EndpointSuffix=core.windows.net"
+    container_name = "slytherinsafestorage"
+    blob_name =  business_uid + "-"+  str(uuid.uuid4())+ os.path.splitext(file.filename)[-1]  # Generate a unique blob name
+    print(blob_name)
+    blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+    blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+    blob_client.upload_blob(file)
+    return blob_client.url
+ 
+
 # Endpoint to retrieve all data from the 'business' table
 @app.route('/pg/business', methods=['GET','POST','PATCH'])
 def get_business():
@@ -1240,13 +1251,17 @@ def get_business():
         
     elif request.method == 'POST':
         try:
-            data = request.json 
-            print(data)  # Print the received data to debug
+            data = request.form.to_dict()  # Convert ImmutableMultiDict to a mutable dictionary
+            # print(data["business_uid"])
+            business_uid = data["business_uid"]
+            file = request.files.get("profile_image_url")
+            file_url = upload_to_azure(file,business_uid)
+            data['profile_image_url'] = file_url
             keys = ', '.join(data.keys())
             values = ', '.join(['%s' for _ in range(len(data))])
             insert_query = f"INSERT INTO business ({keys}) VALUES ({values})"
-            print(insert_query)
             execute_query(insert_query, tuple(data.values()))  # Execute the insert query
+
             return jsonify({'message': 'Business added successfully'})
         
         except Exception as e:
@@ -1272,36 +1287,35 @@ def get_business():
         
 # ////////////////////////// testing above methpost method to upload image as well ////////////////
 
-def upload_to_azure(file,business_uid):
-    connection_string = "DefaultEndpointsProtocol=https;AccountName=chambersafe;AccountKey=LU8ZPmbxH6yALstQxEDxCaoPfS3VEWut06bqEOdwxRiukEm7sgQOkLPflx++XGEwOuSnYlvwo1G5+ASt8lszfA==;EndpointSuffix=core.windows.net"
-    container_name = "slytherinsafestorage"
-    blob_name =  business_uid + "-"+  str(uuid.uuid4())+ os.path.splitext(file.filename)[-1]  # Generate a unique blob name
-    print(blob_name)
-    blob_service_client = BlobServiceClient.from_connection_string(connection_string)
-    blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
-    blob_client.upload_blob(file)
-    return blob_client.url
+# def upload_to_azure(file,business_uid):
+#     connection_string = "DefaultEndpointsProtocol=https;AccountName=chambersafe;AccountKey=LU8ZPmbxH6yALstQxEDxCaoPfS3VEWut06bqEOdwxRiukEm7sgQOkLPflx++XGEwOuSnYlvwo1G5+ASt8lszfA==;EndpointSuffix=core.windows.net"
+#     container_name = "slytherinsafestorage"
+#     blob_name =  business_uid + "-"+  str(uuid.uuid4())+ os.path.splitext(file.filename)[-1]  # Generate a unique blob name
+#     print(blob_name)
+#     blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+#     blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+#     blob_client.upload_blob(file)
+#     return blob_client.url
  
 
 
-@app.route("/testingdataimageupdate",methods = ['POST'])
-def testingdataimageupdate():
-    try:
-        data = request.form.to_dict()  # Convert ImmutableMultiDict to a mutable dictionary
-        # print(data["business_uid"])
-        business_uid = data["business_uid"]
-        file = request.files.get("profile_image_url")
-        file_url = upload_to_azure(file,business_uid)
-        data['profile_image_url'] = file_url
-        keys = ', '.join(data.keys())
-        values = ', '.join(['%s' for _ in range(len(data))])
-        insert_query = f"INSERT INTO business ({keys}) VALUES ({values})"
-        execute_query(insert_query, tuple(data.values()))  # Execute the insert query
+# @app.route("/testingdataimageupdate",methods = ['POST'])
+# def testingdataimageupdate():
+#     try:
+#         data = request.form.to_dict()  # Convert ImmutableMultiDict to a mutable dictionary
+#         # print(data["business_uid"])
+#         business_uid = data["business_uid"]
+#         file = request.files.get("profile_image_url")
+#         file_url = upload_to_azure(file,business_uid)
+#         data['profile_image_url'] = file_url
+#         keys = ', '.join(data.keys())
+#         values = ', '.join(['%s' for _ in range(len(data))])
+#         insert_query = f"INSERT INTO business ({keys}) VALUES ({values})"
+#         execute_query(insert_query, tuple(data.values()))  # Execute the insert query
 
-        return jsonify({'message': 'Business added successfully'})
-
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+#         return jsonify({'message': 'Business added successfully'})
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
 
 
 
