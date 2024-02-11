@@ -693,14 +693,65 @@ def comments_uid(uid):
 
 ################ post user comment ######################
 
+# @app.route("/postcomment", methods=["POST"])
+# def postcomment():
+#     try:
+#         rating = int(request.form['rating'])
+#         review = request.form['review']
+#         user_id = request.form['user_id']
+#         business_uid = request.form['business_uid']
+
+#         # Fetch the username from the user_collection
+#         user_data = user_collection.find_one({"userid": user_id})
+#         username = user_data["username"] if user_data else "Unknown User"
+        
+#         # Set the timezone to 'Asia/Kolkata' for Indian Standard Time
+#         timezone = pytz.timezone('Asia/Kolkata')
+#         current_time = datetime.now(timezone).isoformat()
+
+#         # Generate a unique review_id
+#         review_id = str(uuid.uuid4())
+
+#         new_comment = {
+#             "review_id": review_id,  # Include the review_id here
+#             "rating": rating,
+#             "comment": review,
+#             "user_id": user_id,
+#             "username": username,
+#             "created_at": current_time
+#         }
+
+#         # Check if business_uid exists in the collection
+#         existing_business = service_comments_collection.find_one({"business_uid": business_uid})
+
+#         if existing_business:
+#             # Update the reviews list in the existing business document
+#             service_comments_collection.update_one(
+#                 {"business_uid": business_uid},
+#                 {"$push": {"reviews": new_comment}}
+#             )
+#         else:
+#             # Create a new collection and insert the document
+#             new_business = {
+#                 "business_uid": business_uid,
+#                 "reviews": [new_comment]
+#             }
+#             service_comments_collection.insert_one(new_business)
+
+#         return "done"
+
+#     except Exception as e:
+#         return str(e), 500  # Return the error message with a 500 status code
+
 @app.route("/postcomment", methods=["POST"])
 def postcomment():
     try:
         rating = int(request.form['rating'])
-        review = request.form['review']
         user_id = request.form['user_id']
         business_uid = request.form['business_uid']
-
+        selected_suggestions = request.form.get('selected_suggestions', '').split(' + ')  # Split the string into a list
+        user_reviews = request.form.get('user_reviews', '').split(' + ')   
+        
         # Fetch the username from the user_collection
         user_data = user_collection.find_one({"userid": user_id})
         username = user_data["username"] if user_data else "Unknown User"
@@ -709,13 +760,23 @@ def postcomment():
         timezone = pytz.timezone('Asia/Kolkata')
         current_time = datetime.now(timezone).isoformat()
 
+        # Combine the selected suggestions and user-written reviews into a single string with labels
+        combined_review = ""
+        if selected_suggestions:
+            combined_review += "Selected Suggestions: " + "\n".join(f"{i}.{suggestion}" for i, suggestion in enumerate(selected_suggestions, start=1))
+        if user_reviews:
+            if combined_review:
+                combined_review += ""  # Add a newline if there are both suggestions and reviews
+            combined_review += "User Review: " + "\n".join(user_reviews)
+
         # Generate a unique review_id
         review_id = str(uuid.uuid4())
 
+        # Create a new comment object
         new_comment = {
-            "review_id": review_id,  # Include the review_id here
+            "review_id": review_id,
             "rating": rating,
-            "comment": review,
+            "comment": combined_review,
             "user_id": user_id,
             "username": username,
             "created_at": current_time
@@ -728,7 +789,8 @@ def postcomment():
             # Update the reviews list in the existing business document
             service_comments_collection.update_one(
                 {"business_uid": business_uid},
-                {"$push": {"reviews": new_comment}}
+                {"$push": {"reviews": new_comment}},
+                upsert=True  # Create a new document if it doesn't exist
             )
         else:
             # Create a new collection and insert the document
@@ -741,11 +803,51 @@ def postcomment():
         return "done"
 
     except Exception as e:
-        return str(e), 500  # Return the error message with a 500 status code
-
-
-
+        return str(e),   500  # Return the error message with a   500 status code
+    
  ################### Edit comment Endpoint ##################
+    
+# @app.route("/editcomment", methods=["PUT"])
+# def edit_comment():
+#     try:
+#         business_uid = request.form['business_uid']
+#         review_id = request.form['review_id']
+#         user_id = request.form['user_id']  # Assuming the user_id is sent in the request
+#         new_rating = int(request.form['rating'])
+#         new_review = request.form['review']
+        
+#         # Fetch the specific review to check if the user_id matches
+#         review = service_comments_collection.find_one(
+#             {"business_uid": business_uid, "reviews.review_id": review_id},
+#             {"reviews.$": 1}
+#         )
+
+#           # Set the timezone to 'Asia/Kolkata' for Indian Standard Time
+#         timezone = pytz.timezone('Asia/Kolkata')
+#         current_time = datetime.now(timezone).isoformat()
+
+        
+#         # If the review exists and the user_id matches, proceed with the update
+#         if review and review.get('reviews', [{}])[0].get('user_id') == user_id:
+#             # Update the specific review in the business document using the $ positional operator
+#             result = service_comments_collection.update_one(
+#                 {"business_uid": business_uid, "reviews.review_id": review_id},
+#                 {"$set": {
+#                     "reviews.$.rating": new_rating, 
+#                     "reviews.$.comment": new_review,
+#                     "reviews.$.updated_at": current_time  # Add the current timestamp
+#                 }}
+#             )
+            
+#             if result.matched_count == 0:
+#                 return jsonify({"error": "Business or review not found"}), 404
+            
+#             return jsonify({"message": "Review updated successfully"}), 200
+#         else:
+#             return jsonify({"error": "Unauthorized or review not found"}), 403
+
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
     
 @app.route("/editcomment", methods=["PUT"])
 def edit_comment():
@@ -759,36 +861,34 @@ def edit_comment():
         # Fetch the specific review to check if the user_id matches
         review = service_comments_collection.find_one(
             {"business_uid": business_uid, "reviews.review_id": review_id},
-            {"reviews.$": 1}
+            {"reviews.$":  1}
         )
 
-          # Set the timezone to 'Asia/Kolkata' for Indian Standard Time
+        # Set the timezone to 'Asia/Kolkata' for Indian Standard Time
         timezone = pytz.timezone('Asia/Kolkata')
         current_time = datetime.now(timezone).isoformat()
 
-        
         # If the review exists and the user_id matches, proceed with the update
         if review and review.get('reviews', [{}])[0].get('user_id') == user_id:
             # Update the specific review in the business document using the $ positional operator
             result = service_comments_collection.update_one(
                 {"business_uid": business_uid, "reviews.review_id": review_id},
                 {"$set": {
-                    "reviews.$.rating": new_rating, 
-                    "reviews.$.comment": new_review,
+                    "reviews.$.rating": new_rating,  
+                    "reviews.$.comment": new_review,  # Use the new combined review string
                     "reviews.$.updated_at": current_time  # Add the current timestamp
                 }}
             )
             
-            if result.matched_count == 0:
-                return jsonify({"error": "Business or review not found"}), 404
+            if result.matched_count ==  0:
+                return jsonify({"error": "Business or review not found"}),  404
             
-            return jsonify({"message": "Review updated successfully"}), 200
+            return jsonify({"message": "Review updated successfully"}),  200
         else:
-            return jsonify({"error": "Unauthorized or review not found"}), 403
+            return jsonify({"error": "Unauthorized or review not found"}),  403
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    
+        return jsonify({"error": str(e)}),  500
 
 ####################### Delete Comment Endpoint  ###########################
 
