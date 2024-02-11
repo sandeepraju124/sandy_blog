@@ -760,14 +760,15 @@ def postcomment():
         timezone = pytz.timezone('Asia/Kolkata')
         current_time = datetime.now(timezone).isoformat()
 
-        # Combine the selected suggestions and user-written reviews into a single string with labels
+        
+
         combined_review = ""
         if selected_suggestions:
-            combined_review += "Selected Suggestions: " + "\n".join(f"{i}.{suggestion}" for i, suggestion in enumerate(selected_suggestions, start=1))
+            combined_review += "\n".join(suggestion + "." for suggestion in selected_suggestions)  # Add full stop to each suggestion
         if user_reviews:
             if combined_review:
-                combined_review += ""  # Add a newline if there are both suggestions and reviews
-            combined_review += "User Review: " + "\n".join(user_reviews)
+                combined_review += "\n"  # Add a newline if there are both suggestions and reviews
+            combined_review += "\n".join(review + "." for review in user_reviews)  # Add full stop to each user review
 
         # Generate a unique review_id
         review_id = str(uuid.uuid4())
