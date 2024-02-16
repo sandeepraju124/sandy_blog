@@ -693,55 +693,6 @@ def comments_uid(uid):
 
 ################ post user comment ######################
 
-# @app.route("/postcomment", methods=["POST"])
-# def postcomment():
-#     try:
-#         rating = int(request.form['rating'])
-#         review = request.form['review']
-#         user_id = request.form['user_id']
-#         business_uid = request.form['business_uid']
-
-#         # Fetch the username from the user_collection
-#         user_data = user_collection.find_one({"userid": user_id})
-#         username = user_data["username"] if user_data else "Unknown User"
-        
-#         # Set the timezone to 'Asia/Kolkata' for Indian Standard Time
-#         timezone = pytz.timezone('Asia/Kolkata')
-#         current_time = datetime.now(timezone).isoformat()
-
-#         # Generate a unique review_id
-#         review_id = str(uuid.uuid4())
-
-#         new_comment = {
-#             "review_id": review_id,  # Include the review_id here
-#             "rating": rating,
-#             "comment": review,
-#             "user_id": user_id,
-#             "username": username,
-#             "created_at": current_time
-#         }
-
-#         # Check if business_uid exists in the collection
-#         existing_business = service_comments_collection.find_one({"business_uid": business_uid})
-
-#         if existing_business:
-#             # Update the reviews list in the existing business document
-#             service_comments_collection.update_one(
-#                 {"business_uid": business_uid},
-#                 {"$push": {"reviews": new_comment}}
-#             )
-#         else:
-#             # Create a new collection and insert the document
-#             new_business = {
-#                 "business_uid": business_uid,
-#                 "reviews": [new_comment]
-#             }
-#             service_comments_collection.insert_one(new_business)
-
-#         return "done"
-
-#     except Exception as e:
-#         return str(e), 500  # Return the error message with a 500 status code
 
 @app.route("/postcomment", methods=["POST"])
 def postcomment():
@@ -760,15 +711,13 @@ def postcomment():
         timezone = pytz.timezone('Asia/Kolkata')
         current_time = datetime.now(timezone).isoformat()
 
-        
+        # Initialize the combined_review with the selected suggestions
+        combined_review = "\n".join(suggestion for suggestion in selected_suggestions)
 
-        combined_review = ""
-        if selected_suggestions:
-            combined_review += "\n".join(suggestion  for suggestion in selected_suggestions)  # Add full stop to each suggestion
+        # If there are user reviews, append them to the combined_review
         if user_reviews:
-            if combined_review:
-                combined_review += "\n"  # Add a newline if there are both suggestions and reviews
-            combined_review += "\n".join(review  for review in user_reviews)  # Add full stop to each user review
+            combined_review += "\n"  # Add a newline if there are both suggestions and reviews
+            combined_review += "\n".join(review for review in user_reviews)
 
         # Generate a unique review_id
         review_id = str(uuid.uuid4())
@@ -804,51 +753,11 @@ def postcomment():
         return "done"
 
     except Exception as e:
-        return str(e),   500  # Return the error message with a   500 status code
+        return str(e),  500
     
  ################### Edit comment Endpoint ##################
     
-# @app.route("/editcomment", methods=["PUT"])
-# def edit_comment():
-#     try:
-#         business_uid = request.form['business_uid']
-#         review_id = request.form['review_id']
-#         user_id = request.form['user_id']  # Assuming the user_id is sent in the request
-#         new_rating = int(request.form['rating'])
-#         new_review = request.form['review']
-        
-#         # Fetch the specific review to check if the user_id matches
-#         review = service_comments_collection.find_one(
-#             {"business_uid": business_uid, "reviews.review_id": review_id},
-#             {"reviews.$": 1}
-#         )
 
-#           # Set the timezone to 'Asia/Kolkata' for Indian Standard Time
-#         timezone = pytz.timezone('Asia/Kolkata')
-#         current_time = datetime.now(timezone).isoformat()
-
-        
-#         # If the review exists and the user_id matches, proceed with the update
-#         if review and review.get('reviews', [{}])[0].get('user_id') == user_id:
-#             # Update the specific review in the business document using the $ positional operator
-#             result = service_comments_collection.update_one(
-#                 {"business_uid": business_uid, "reviews.review_id": review_id},
-#                 {"$set": {
-#                     "reviews.$.rating": new_rating, 
-#                     "reviews.$.comment": new_review,
-#                     "reviews.$.updated_at": current_time  # Add the current timestamp
-#                 }}
-#             )
-            
-#             if result.matched_count == 0:
-#                 return jsonify({"error": "Business or review not found"}), 404
-            
-#             return jsonify({"message": "Review updated successfully"}), 200
-#         else:
-#             return jsonify({"error": "Unauthorized or review not found"}), 403
-
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
     
 @app.route("/editcomment", methods=["PUT"])
 def edit_comment():
@@ -1059,11 +968,16 @@ def post_question():
             askcommunity.insert_one(new_document)
             business_data = new_document
 
+            # Set the timezone to 'Asia/Kolkata' for Indian Standard Time
+        timezone = pytz.timezone('Asia/Kolkata')
+        current_time = datetime.now(timezone).isoformat()
+
+
         # Create a new question document
         question_id = str(uuid.uuid4().hex[:10])
         new_question = {
             "qdetails": {
-                "created_at": datetime.now().isoformat(),  # You can set the current timestamp here
+                "created_at": current_time,  # You can set the current timestamp here
                 "questionid": question_id,  # Generate a unique question ID
                 "userid": userid,
             },
@@ -1103,6 +1017,11 @@ def edit_question():
 
         if business_data is None:
             return jsonify({"error": "Business data not found"}), 404
+        
+        # Set the timezone to 'Asia/Kolkata' for Indian Standard Time
+        timezone = pytz.timezone('Asia/Kolkata')
+        current_time = datetime.now(timezone).isoformat()
+
 
         # Check if the question exists and if the userid matches
         question_found = False
@@ -1111,7 +1030,7 @@ def edit_question():
                 question_found = True
                 question['question'] = new_question_text
                 # Update the updated_at timestamp for the question
-                question['qdetails']['updated_at'] = datetime.now().isoformat()
+                question['qdetails']['updated_at'] = current_time
                 break
 
         if not question_found:
@@ -1186,10 +1105,15 @@ def post_answer():
             # Generate a unique answer ID and take the first 10 digits
             answer_id = str(uuid.uuid4().hex)[:10]
 
+            # Set the timezone to 'Asia/Kolkata' for Indian Standard Time
+            timezone = pytz.timezone('Asia/Kolkata')
+            current_time = datetime.now(timezone).isoformat()
+
+
             # Create a new answer document
             new_answer = {
                 "adetails": {
-                    "created_at": datetime.now().isoformat(),  # Set the current timestamp here
+                    "created_at": current_time,  # Set the current timestamp here
                     "userid": userid,
                     "answerid": answer_id,  # Include the answer ID here
                 },
@@ -1228,6 +1152,10 @@ def edit_answer():
             return jsonify({"error": "Missing required data"}), 400
 
         business_data = askcommunity.find_one({"business_uid": business_uid, "data.qdetails.questionid": question_id})  
+        # Set the timezone to 'Asia/Kolkata' for Indian Standard Time
+        timezone = pytz.timezone('Asia/Kolkata')
+        current_time = datetime.now(timezone).isoformat()
+
 
         if business_data:
             for question in business_data['data']:
@@ -1236,7 +1164,7 @@ def edit_answer():
                         if answer['adetails']['answerid'] == answer_id and answer['adetails']['userid'] == userid:
                             answer['answer'] = new_answer_text
                             # Update the updated_at timestamp for the answer
-                            answer['adetails']['updated_at'] = datetime.now().isoformat()
+                            answer['adetails']['updated_at'] = current_time,
                             askcommunity.update_one({"_id": business_data["_id"]}, {"$set": business_data})
                             return jsonify({"message": "Answer updated successfully"}), 200
             return jsonify({"error": "Answer not found or unauthorized"}), 403
