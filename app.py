@@ -1137,6 +1137,7 @@ def post_answer():
     
 
 
+
 ########### Endpoint for Edit_Answer ########
     
 @app.route('/edit_answer', methods=['PUT'])
@@ -1207,9 +1208,27 @@ def delete_answer():
     
 
 
-
-
-    
+@app.route('/overall_rating/<business_uid>', methods = ["GET"])
+def overall_rating(business_uid):
+    # uid = user.get("business_uid")
+    try:
+        comment_data = service_comments_collection.find_one({"business_uid": business_uid})
+        print("")
+        if comment_data:
+            reviews = comment_data.get("reviews", [])
+            overall_rating = sum(review.get("rating", 0) for review in reviews) / len(reviews) if reviews else 0
+            overall_rating = round(overall_rating, 1)
+            # filtered_user["reviews_length"] = len(reviews)
+        else:
+            overall_rating = 0
+        # return Response(response=json.dumps(overall_rating), status=200, mimetype="application/json")
+        return jsonify(overall_rating), 200
+    except KeyError:
+        return jsonify({"message": "Key error occurred. Invalid data structure."}), 500
+    except ZeroDivisionError:
+        return jsonify({"message": "No reviews available for this business."}), 200
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
 
 
 
