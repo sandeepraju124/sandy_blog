@@ -1217,12 +1217,14 @@ def overall_rating(business_uid):
         if comment_data:
             reviews = comment_data.get("reviews", [])
             overall_rating = sum(review.get("rating", 0) for review in reviews) / len(reviews) if reviews else 0
+            reviews_count = len(reviews)
             overall_rating = round(overall_rating, 1)
+            return jsonify({"overall_rating": overall_rating, "reviews_count": reviews_count}), 200
             # filtered_user["reviews_length"] = len(reviews)
         else:
-            overall_rating = 0
-        # return Response(response=json.dumps(overall_rating), status=200, mimetype="application/json")
-        return jsonify(overall_rating), 200
+            # overall_rating = 0
+            return jsonify({"message": "No reviews available for this business.", "overall_rating": 0, "reviews_count": 0}), 200
+        # return jsonify(overall_rating), 200
     except KeyError:
         return jsonify({"message": "Key error occurred. Invalid data structure."}), 500
     except ZeroDivisionError:
