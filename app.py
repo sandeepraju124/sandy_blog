@@ -23,6 +23,7 @@ service_comments_collection = db.services_comments
 user_collection = db.users
 services_collection = db.services
 askcommunity = db.ask_community
+business_categories_collection = db.business_categories
 
 
 
@@ -1233,6 +1234,16 @@ def overall_rating(business_uid):
         return jsonify({"message": str(e)}), 500
 
 
+@app.route('/business_categories', methods=["GET"])
+def business_categories():
+    try:
+        cursor = list(business_categories_collection.find())
+        for category in cursor:
+            category["_id"] = str(category["_id"])
+        return Response(response=json.dumps(cursor), status=200, mimetype="application/json")
+    
+    except Exception as e:
+        return Response(response=json.dumps({"message": str(e)}), status=500, mimetype="application/json")
 
 ######################################################
     # POSTGRESS REST APIS
@@ -1391,7 +1402,6 @@ def get_category():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 
     
 
