@@ -1483,6 +1483,48 @@ def businessforlatlong():
     # print("result")
     return jsonify(result)
 
+
+
+# search
+# API endpoint for searching businesses
+@app.route('/pg/search', methods=['GET'])
+def search_business():
+    query = request.args.get('query')
+    count = request.args.get('count', default=None, type=int)  # Get the count parameter
+    print(query)
+    if not query:
+        return jsonify({'error': 'Query parameter "query" is required'}), 400
+
+    # Construct the SQL query to search for businesses
+    sql_query = """
+        SELECT * FROM business
+        WHERE business_name ILIKE %s
+    """
+    params = ('%' + query + '%',)  # Parameters for the SQL query
+
+    try:
+        # Execute the SQL query using the execute_query function
+        results = execute_query(sql_query, params)
+        
+        if count is not None:
+            results = results[:count]
+
+        # Serialize the results
+        serialized_results = []
+        for result in results:
+            serialized_results.append({
+                'business_name': result['business_name'],
+                'business_uid': result['business_uid'],
+                # Serialize other fields as needed
+            })
+
+        return jsonify(serialized_results)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+
+
 ######################################################
 # |||||||   POSTGRESS REST APIS  |||||||||||
 ######################################################
