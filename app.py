@@ -1522,6 +1522,45 @@ def search_business():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/pg/fulltext_search', methods=['GET'])
+def fullsearch_business():
+    query = request.args.get('query')
+    count = request.args.get('count', default=None, type=int)  # Get the count parameter
+
+    if not query:
+        return jsonify({'error': 'Query parameter "query" is required'}), 400
+
+    # Append the wildcard to the end of the query
+    query += ':*'
+
+    # Construct the SQL query to search for businesses
+    sql_query = """
+        SELECT * FROM business
+        WHERE to_tsvector('english', business_name || ' ' || business_description || ' ' || country || ' ' || category || ' ' || sub_category) @@ to_tsquery('english', %s)
+    """
+    params = (query,)
+
+    try:
+        # Execute the SQL query using the execute_query function
+        results = execute_query(sql_query, params)
+        
+        if count is not None:
+            results = results[:count]
+
+        # Serialize the results
+        serialized_results = []
+        for result in results:
+            serialized_results.append({
+                'business_name': result['business_name'],
+                'business_uid': result['business_uid'],
+                'profile_image_url': result['profile_image_url'],
+                # Serialize other fields as needed
+            })
+
+        return jsonify(serialized_results)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 
 
