@@ -1522,10 +1522,12 @@ def search_business():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+    
+
 @app.route('/pg/fulltext_search', methods=['GET'])
 def fullsearch_business():
     query = request.args.get('query')
-    count = request.args.get('count', default=None, type=int)  # Get the count parameter
+    count = request.args.get('count', default=None, type=int) # Get the count parameter
 
     if not query:
         return jsonify({'error': 'Query parameter "query" is required'}), 400
@@ -1550,10 +1552,25 @@ def fullsearch_business():
         # Serialize the results
         serialized_results = []
         for result in results:
+            # Fetch the reviews for the business from the service_comments collection
+            reviews = service_comments_collection.find_one({"business_uid": result['business_uid']})
+            if reviews and 'reviews' in reviews:
+                # Calculate the average rating
+                total_rating = sum(review['rating'] for review in reviews['reviews'])
+                average_rating = total_rating / len(reviews['reviews']) if reviews['reviews'] else 0
+            else:
+                average_rating = 0
+
             serialized_results.append({
                 'business_name': result['business_name'],
                 'business_uid': result['business_uid'],
                 'profile_image_url': result['profile_image_url'],
+                'latitude': result['latitude'],
+                'longitude': result['longitude'],
+                'business_description': result['business_description'],
+                'country': result['country'],
+                'address': result['address'],
+                'average_rating': average_rating
                 # Serialize other fields as needed
             })
 
