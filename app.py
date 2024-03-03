@@ -1557,7 +1557,7 @@ def fullsearch_business():
             if reviews and 'reviews' in reviews:
                 # Calculate the average rating
                 total_rating = sum(review['rating'] for review in reviews['reviews'])
-                average_rating = total_rating / len(reviews['reviews']) if reviews['reviews'] else 0
+                average_rating = round(total_rating / len(reviews['reviews']), 1) if reviews['reviews'] else 0
             else:
                 average_rating = 0
 
