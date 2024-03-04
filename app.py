@@ -202,54 +202,18 @@ def user():
             users["_id"]= str(users["_id"])
         return Response(response = json.dumps(data),status = 200,mimetype="application/json")
     elif request.method=='POST':
-        if "dp" not in request.files:
-            # print("if statement")
-            blob_url = 0
-        else:
-            # print("hitted post in user")
-            dp = request.files["dp"]
-
-            # Extract the file extension from the uploaded image
-            filename, ext = os.path.splitext(dp.filename)
-
-            blob_service_client = BlobServiceClient.from_connection_string("DefaultEndpointsProtocol=https;AccountName=mussolini;AccountKey=C/bpeOJzdZwixWwD04pWtGKnmu7Grb6JjL5jnuDBfxkiYvMwniDIr6gTD3CeZECkXQqFlAGx6+HR+AStQeh4fQ==;EndpointSuffix=core.windows.net")
-            container_client = blob_service_client.get_container_client("sss")
-            random_guid = str(uuid.uuid4())
-            blob_name = random_guid + ext
-            blob_client = container_client.get_blob_client(blob_name)
-            blob_client.upload_blob(dp, content_settings = ContentSettings(content_type="image/jpeg"))
-
-            #  blob_client.upload_blob(dp)
-            blob_url = blob_client.url 
-            print(blob_url)
-
-
-        name = request.form['name']
-        username = request.form['username']
-        email = request.form["email"]
-        # dp = request.form["dp"]
-        street = request.form['street']
-        state = request.form['state']
-        zipcode = request.form['zipcode']
-        lat = request.form['lat']
-        lng = request.form['lng']
-        userid = request.form['userid']
+        blob_url = 0
+        if "profile_image_url" in request.files:
+            data = request.form.to_dict()  # Convert ImmutableMultiDict to a mutable dictionary
+            userid = data["userid"]
+            file = request.files.get("profile_image_url")
+            blob_url = upload_to_azure(file,userid)
+            
         result = user_collection.insert_one({
-                'name':name, 
-                'username':username,
-                'email':email,
-                'dp':blob_url,
-                "zipcode":zipcode,
-                "address":{
-                    "street":street,
-                    "state":state,
-                    "geo": {
-                            "lat":lat,
-                            "lng":lng
-                            }
-                },
-                "userid":userid
-                })
+    **request.form.to_dict(),  # Inserting all form data
+    'dp': blob_url if blob_url else 0  # Inserting blob URL if it exists, else None
+})
+
 
         return dumps({'id': str(result.inserted_id)})
         # return Response(dumps({'id': str(result.inserted_id)}), headers=headers)
