@@ -1,5 +1,6 @@
 from json import dumps
 import os
+import tempfile
 import pymongo
 from flask import Flask, json, jsonify
 from flask import render_template, request, Response
@@ -31,14 +32,14 @@ business_categories_collection = db.business_categories
 
 # Create a text index on the 'business_name & etc' field (search) 
 ## FYI: we don't neccessarily need to create a new collection for search we can retreive data from services_collection which as all the business details.
-services_collection.create_index([
-    ("business_name", pymongo.TEXT),
-    ("business_description", pymongo.TEXT),
-    ("business_uid", pymongo.TEXT),
-    ("profile_image", pymongo.TEXT),
-    ("category", pymongo.TEXT),
-    ("sub_category", pymongo.TEXT)
-])
+# services_collection.create_index([
+#     ("business_name", pymongo.TEXT),
+#     ("business_description", pymongo.TEXT),
+#     ("business_uid", pymongo.TEXT),
+#     ("profile_image", pymongo.TEXT),
+#     ("category", pymongo.TEXT),
+#     ("sub_category", pymongo.TEXT)
+# ])
 
 
 
@@ -339,42 +340,43 @@ def singleuserid(userid):
  #################### below is the endpoint for Search ######################### 
 ####################################################################
         
+# commenting this because search api implemented below for pg/search
 
-@app.route('/search', methods=['GET'])
-def search():
-    try:
-        query = request.args.get("query")
-        # Use the $text operator for text search
-        services_data = list(services_collection.find({
-            "$text": {
-                "$search": query,
-                "$language": "english",
-                "$caseSensitive": False,
-            }
-        }))
+# @app.route('/search', methods=['GET'])
+# def search():
+#     try:
+#         query = request.args.get("query")
+#         # Use the $text operator for text search
+#         services_data = list(services_collection.find({
+#             "$text": {
+#                 "$search": query,
+#                 "$language": "english",
+#                 "$caseSensitive": False,
+#             }
+#         }))
 
-        # Calculate the average rating for each service and include location
-        for service in services_data:
-            service_id = service['business_uid']
-            comments = list(service_comments_collection.find({"business_uid": service_id}))
-            # Extract ratings from the nested 'reviews' field
-            ratings = [review['rating'] for comment in comments for review in comment.get('reviews', []) if 'rating' in review]
-            if ratings:
-                average_rating = sum(ratings) / len(ratings)
-                service['average_rating'] = round(average_rating, 1)
-            else:
-                service['average_rating'] = 0  # No ratings available
-            # Include the location field from the service document
-            service['country'] = service.get('country')
+#         # Calculate the average rating for each service and include location
+#         for service in services_data:
+#             service_id = service['business_uid']
+#             comments = list(service_comments_collection.find({"business_uid": service_id}))
+#             # Extract ratings from the nested 'reviews' field
+#             ratings = [review['rating'] for comment in comments for review in comment.get('reviews', []) if 'rating' in review]
+#             if ratings:
+#                 average_rating = sum(ratings) / len(ratings)
+#                 service['average_rating'] = round(average_rating, 1)
+#             else:
+#                 service['average_rating'] = 0  # No ratings available
+#             # Include the location field from the service document
+#             service['country'] = service.get('country')
 
-        for result in services_data:
-            result["_id"] = str(result["_id"])
+#         for result in services_data:
+#             result["_id"] = str(result["_id"])
 
-        return Response(response=json.dumps(services_data), status=200, mimetype="application/json")
+#         return Response(response=json.dumps(services_data), status=200, mimetype="application/json")
 
-    except Exception as e:
-        print(f"Search error: {e}")  # Debug print
-        return Response(response=json.dumps({"message": "Error in search"}), status=500, mimetype="application/json")
+#     except Exception as e:
+#         print(f"Search error: {e}")  # Debug print
+#         return Response(response=json.dumps({"message": "Error in search"}), status=500, mimetype="application/json")
 
 
 ####################################################################
@@ -808,66 +810,67 @@ def delete_comment():
 
 ########################################### testing #####################################
 
-@app.route('/uploadimage',methods=['POST'])
-def upload_image():
-    try:
+# commenting this because below azure upload function is created
+# @app.route('/uploadimage',methods=['POST'])
+# def upload_image():
+#     try:
         
-        file = request.files['image']
-        # business_name = request.form['business_name']
-        account_name = 'prometheus1137'
-        account_key = 'QeCd4oED1ZKVaP0W9ncB7KYUv9qulmESzjb6NCpJQ/OMBlY8eWiSau+Jvu8AMfpV2ce31T6I9Hhy+AStf6oPkg=='
-        container_name = 'sssv1'
-        timestamp = time.time()
-        timestamp_ms = int(timestamp * 1000)
-        filename = file.filename
-        file_extension = filename.split('.')[-1]
-        blob_name = str(timestamp_ms) + '.' + file_extension
-        connection_string = f"DefaultEndpointsProtocol=https;AccountName={account_name};AccountKey={account_key};EndpointSuffix=core.windows.net"
-        # DefaultEndpointsProtocol=https;AccountName=prometheus1137;AccountKey=QeCd4oED1ZKVaP0W9ncB7KYUv9qulmESzjb6NCpJQ/OMBlY8eWiSau+Jvu8AMfpV2ce31T6I9Hhy+AStf6oPkg==;EndpointSuffix=core.windows.net
+#         file = request.files['image']
+#         # business_name = request.form['business_name']
+#         account_name = 'prometheus1137'
+#         account_key = 'QeCd4oED1ZKVaP0W9ncB7KYUv9qulmESzjb6NCpJQ/OMBlY8eWiSau+Jvu8AMfpV2ce31T6I9Hhy+AStf6oPkg=='
+#         container_name = 'sssv1'
+#         timestamp = time.time()
+#         timestamp_ms = int(timestamp * 1000)
+#         filename = file.filename
+#         file_extension = filename.split('.')[-1]
+#         blob_name = str(timestamp_ms) + '.' + file_extension
+#         connection_string = f"DefaultEndpointsProtocol=https;AccountName={account_name};AccountKey={account_key};EndpointSuffix=core.windows.net"
+#         # DefaultEndpointsProtocol=https;AccountName=prometheus1137;AccountKey=QeCd4oED1ZKVaP0W9ncB7KYUv9qulmESzjb6NCpJQ/OMBlY8eWiSau+Jvu8AMfpV2ce31T6I9Hhy+AStf6oPkg==;EndpointSuffix=core.windows.net
         
-        blob_service_client = BlobServiceClient.from_connection_string(connection_string)
-        container_client = blob_service_client.get_container_client(container_name)
-        blob_client = container_client.get_blob_client(blob_name)
+#         blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+#         container_client = blob_service_client.get_container_client(container_name)
+#         blob_client = container_client.get_blob_client(blob_name)
 
 
-        blob_client.upload_blob(file.read())
-        blob_url = blob_client.url
-        print(blob_url)
+#         blob_client.upload_blob(file.read())
+#         blob_url = blob_client.url
+#         print(blob_url)
 
-        # data = {'business_name': business_name, 'image_url': blob_url}
-        data = {'image_url': blob_url}
-        services_collection.insert_one(data)
+#         # data = {'business_name': business_name, 'image_url': blob_url}
+#         data = {'image_url': blob_url}
+#         services_collection.insert_one(data)
  
 
         
-        return blob_url, 200 
+#         return blob_url, 200 
 
 
-    except Exception as e:
-        return str(e), 500
+#     except Exception as e:
+#         return str(e), 500
 
-@app.route('/uploadmultipleimages', methods = ["POST"])
-def upload_multiple_image():
-    try:
+# @app.route('/uploadmultipleimages', methods = ["POST"])
+# def upload_multiple_image():
+#     try:
 
-        business_name = request.form['business_name']
+#         business_name = request.form['business_name']
 
-        blob_urls = []
-        for file in request.files.getlist('image'):
-            filename = file.filename
-            file_extension = filename.split('.')[-1]
-            blob_name = str(timestamp) + '_' + filename
-            blob_client = container_client.get_blob_client(blob_name)
+#         blob_urls = []
+#         for file in request.files.getlist('image'):
+#             filename = file.filename
+#             file_extension = filename.split('.')[-1]
+#             blob_name = str(timestamp) + '_' + filename
+#             blob_client = container_client.get_blob_client(blob_name)
 
-            blob_client.upload_blob(file.read())
-            blob_urls.append(blob_client.url)
+#             blob_client.upload_blob(file.read())
+#             blob_urls.append(blob_client.url)
 
-            data = {'business_name': business_name, 'image_urls': blob_urls}
-            services_collection.insert_one(data)
+#             data = {'business_name': business_name, 'image_urls': blob_urls}
+#             services_collection.insert_one(data)
 
-        return {'blob_urls': blob_urls}, 200
+#         return {'blob_urls': blob_urls}, 200
 
-    except Exception as e:
+#     except Exception as e:
         return str(e), 500
     
 
@@ -1172,6 +1175,41 @@ def delete_answer():
         return jsonify({"error": str(e)}), 500
     
 
+@app.route('/post_multiple_images', methods = ["POST"])
+def post_multiple_images():
+    business_uid = request.form.get("business_uid")
+    if not business_uid:
+        return 'no business uid provided'
+    if 'images' not in request.files:
+        return 'No file part'
+    files = request.files.getlist('images')
+    # aadhar_front = request.files.get("aadhar_front")
+    # aadhar_back = request.files.get("aadhar_front")
+    images_list = []
+    print(business_uid) 
+    for file in files:
+        file_url = upload_to_azure(file,business_uid=business_uid)
+        images_list.append(file_url)
+        # print(file_url)
+    existing_business = services_collection.find_one({'business_uid':business_uid})
+    if existing_business:
+        update_data = {'images': images_list}
+        services_collection.update_one({'business_uid': business_uid}, {'$set': update_data})
+    else:
+        data_to_insert = {'business_uid': business_uid, 'images': images_list}
+        if "aadhar_front" in request.files:
+            aadhar_front = request.files.get("aadhar_front")
+            aadhar_back = request.files.get("aadhar_back")
+            print(aadhar_front)
+            aadhar_front_url = upload_to_azure(aadhar_front, business_uid)
+            aadhar_back_url = upload_to_azure(aadhar_back, business_uid)
+            print(aadhar_front_url)
+            data_to_insert['aadhar_front'] = aadhar_front_url
+            data_to_insert['aadhar_back'] = aadhar_back_url
+        services_collection.insert_one(data_to_insert)    
+    
+    return "Images uploaded successfully"
+
 
 @app.route('/overall_rating/<business_uid>', methods = ["GET"])
 def overall_rating(business_uid):
@@ -1261,6 +1299,20 @@ def upload_to_azure(file,business_uid):
     blob_client.upload_blob(file)
     return blob_client.url
  
+# @app.route('/upload', methods=['POST'])
+def upload_file():
+    uploaded_files = request.files.getlist("files")
+    business_uid = request.form.get("business_uid")  # Assuming business_uid is sent in the request form
+    urls = []
+
+    for file in uploaded_files:
+        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+            file.save(temp_file.name)
+            url = upload_to_azure(temp_file.name, business_uid)
+            urls.append(url)
+            os.unlink(temp_file.name)  # Delete the temporary file after uploading
+
+    return jsonify(urls=urls)
 
 # Endpoint to retrieve all data from the 'business' table
 @app.route('/pg/business', methods=['GET','POST','PATCH'])
