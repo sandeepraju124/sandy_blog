@@ -563,6 +563,7 @@ def objid(objid):
 ########################################################
     
 
+
 @app.route('/user_activities/<user_id>', methods=['GET'])
 def get_user_activities(user_id):
     try:
@@ -570,24 +571,25 @@ def get_user_activities(user_id):
         comments = list(service_comments_collection.find({"reviews.user_id": user_id}))
         questions = list(askcommunity.find({"data.qdetails.userid": user_id}))
         all_answers = list(askcommunity.find({}))
-        # print(services)
 
-        # Fetch business data from services_collection
-        businesses = {document['business_uid']: document['business_name'] for document in services_collection.find({})}
+        # Fetch business data from PostgreSQL
+        businesses_query = "SELECT business_uid, business_name FROM business;"
+        businesses = execute_query(businesses_query)
+        businesses_dict = {business['business_uid']: business['business_name'] for business in businesses}
 
         # Process the fetched data to get user's activities
         user_comments = [
-            {**review, 'business_uid': document['business_uid'], 'business_name': businesses.get(document['business_uid'])} 
+            {**review, 'business_uid': document['business_uid'], 'business_name': businesses_dict.get(document['business_uid'])} 
             for document in comments for review in document.get('reviews', []) 
             if review.get('user_id') == user_id
         ]
         user_questions = [
-            {**item, 'business_uid': document['business_uid'], 'business_name': businesses.get(document['business_uid'])} 
+            {**item, 'business_uid': document['business_uid'], 'business_name': businesses_dict.get(document['business_uid'])} 
             for document in questions for item in document.get('data', []) 
             if item.get('qdetails', {}).get('userid') == user_id
         ]
         user_answers = [
-            {**answer, 'business_uid': document['business_uid'], 'business_name': businesses.get(document['business_uid'])} 
+            {**answer, 'business_uid': document['business_uid'], 'business_name': businesses_dict.get(document['business_uid'])} 
             for document in all_answers for item in document.get('data', []) 
             for answer in item.get('answers', []) 
             if answer.get('adetails', {}).get('userid') == user_id
