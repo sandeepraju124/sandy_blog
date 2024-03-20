@@ -76,9 +76,19 @@ def home():
 # terms and conditions screen
 
 @app.route('/termsandconditions', methods=['GET'])
-def tandc():
+def termsandconditions():
     
     return render_template('termconditions.html')
+
+@app.route('/contact', methods=['GET'])
+def contact():
+    
+    return render_template('contact.html')
+
+@app.route('/ourservices', methods=['GET'])
+def ourservices():
+    
+    return render_template('ourservices.html')
 
 
 

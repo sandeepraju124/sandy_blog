@@ -5816,6 +5816,37 @@ textarea.form-control-lg {
   width: 0.4rem;
   height: 0.8rem;
 }
+
+
+
+/*  */
+/* Define styles for the video background */
+.bg-video {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1; /* Push the video behind other content */
+}
+
+/* Style the content overlay */
+.content-overlay {
+  position: relative;
+  z-index: 1; /* Ensure content is above the video */
+}
+
+/* Adjustments for the footer */
+footer.footer {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background-color: white; /* Set background color to white */
+  z-index: 999; /* Ensure footer is on top of all other content */
+}
+
+
 .bs-tooltip-end .tooltip-arrow::before, .bs-tooltip-auto[data-popper-placement^=right] .tooltip-arrow::before {
   right: -1px;
   border-width: 0.4rem 0.4rem 0.4rem 0;
