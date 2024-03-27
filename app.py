@@ -1468,16 +1468,36 @@ def get_house_data():
 
 # get data based on lat and lang
 
-@app.route('/pg/business/latlong',methods=['GET'])
+    
+@app.route('/pg/business/latlong', methods=['GET'])
 def businessforlatlong():
-    latitude = float(request.args.get('latitude'))
-    longitude = float(request.args.get('longitude'))
+    # Check if required parameters are provided
+    latitude = request.args.get('latitude')
+    longitude = request.args.get('longitude')
     distance = request.args.get('distance')
     key = request.args.get('key')
     value = request.args.get('value')
-    # print(latitude)
-    # print(key)
 
+    # Validate that latitude and longitude are provided and are floats
+    if not latitude or not longitude:
+        return jsonify({'error': 'Latitude and longitude parameters are required'}), 400
+    try:
+        latitude = float(latitude)
+        longitude = float(longitude)
+    except ValueError:
+        return jsonify({'error': 'Latitude and longitude must be valid numbers'}), 400
+
+    # Validate that distance is provided and is a positive number
+    if not distance:
+        return jsonify({'error': 'Distance parameter is required'}), 400
+    try:
+        distance = float(distance)
+        if distance <= 0:
+            return jsonify({'error': 'Distance must be a positive number'}), 400
+    except ValueError:
+        return jsonify({'error': 'Distance must be a valid number'}), 400
+
+    # Construct the SQL query
     query = """
     SELECT *
     FROM business
@@ -1492,24 +1512,21 @@ def businessforlatlong():
         query += f"AND business.{key} = %s"
 
     # Execute the query
-    result = execute_query(query, (latitude, longitude, distance, value) if key and value else (latitude, longitude, distance))
+    try:
+        result = execute_query(query, (latitude, longitude, distance, value) if key and value else (latitude, longitude, distance))
+    except Exception as e:
+        return jsonify({'error': f'Database error: {str(e)}'}), 500
 
+    # Check if any businesses were found
+    if not result:
+        return jsonify({'message': 'No businesses found within the specified distance'}), 200
 
-
-    # query = f"""
-    # SELECT *
-    # FROM business
-    # WHERE ST_DWithin(
-    #     ST_GeographyFromText('POINT(%s %s)'),
-    #     geography(ST_MakePoint(business.longitude, business.latitude)),
-    #     %s
-    # ) And business.{key} = %s
-    # """
-
-    # result = execute_query(query, (latitude, longitude, distance,value))
-    # print(result)
-    # print("result")
+    # Return the results
     return jsonify(result)
+
+
+
+   
 
 
 
