@@ -30,19 +30,6 @@ business_categories_collection = db.business_categories
 
 
 
-# Create a text index on the 'business_name & etc' field (search) 
-## FYI: we don't neccessarily need to create a new collection for search we can retreive data from services_collection which as all the business details.
-# services_collection.create_index([
-#     ("business_name", pymongo.TEXT),
-#     ("business_description", pymongo.TEXT),
-#     ("business_uid", pymongo.TEXT),
-#     ("profile_image", pymongo.TEXT),
-#     ("category", pymongo.TEXT),
-#     ("sub_category", pymongo.TEXT)
-# ])
-
-
-
 # azure storage details
 account_name = 'prometheus1137'
 account_key = 'QeCd4oED1ZKVaP0W9ncB7KYUv9qulmESzjb6NCpJQ/OMBlY8eWiSau+Jvu8AMfpV2ce31T6I9Hhy+AStf6oPkg=='
@@ -145,29 +132,6 @@ def rescomments():
         users["_id"]= str(users["_id"])
     return Response(response = json.dumps(data),status = 200,mimetype="application/json")
 
-##########      GET only 1 restaurent by providing ID        #################
-
-# @app.route("/serviceIdForComments/<id>",methods=["GET"])
-# def rescommentIdForComments(id):
-#     # data = service_comments_collection.find_one(ObjectId(id))
-#     data = service_comments_collection.find_one({"serviceid": id})
-#     if data is None:
-#         return Response(response = json.dumps({"error":"comment not found"}),status=404,mimetype="application/json")
-#     # print(data)
-#     # for users in data:
-#     data["_id"]= str(data["_id"])
-#     return Response(response = json.dumps(data),status = 200,mimetype="application/json")
-
-# @app.route("/rescomments/<uid>", methods=["GET"])
-# def rescommentIdForComments(uid):
-#     # data = service_comments_collection.find_one(ObjectId(id))
-#     data = service_comments_collection.find_one({"serviceid": uid})
-#     if data is None:
-#         return Response(response=json.dumps({"error": "comment not found"}), status=404, mimetype="application/json")
-#     # print(data)
-#     # for users in data:
-#     data["_id"] = str(data["_id"])
-#     return Response(response=json.dumps(data), status=200, mimetype="application/json")
 
 @app.route('/rescomments/<uid>', methods=["GET"])
 def rescommentIdForComments(uid):
@@ -303,181 +267,46 @@ def singleuserid(userid):
             return Response(response=json.dumps({"message": "Failed to update user"}), status=500, mimetype="application/json")
 
 
-# //////////////////// edit user /////////////////////////////
-
-# @app.route("/edituser/<userid>", methods=["PUT"])
-# def edit_user(userid):
-#     try:
-#         # Check if the user exists
-#         existing_user = user_collection.find_one({"userid": userid})
-#         print(existing_user)
-#         if existing_user is None:
-#             return Response(response=json.dumps({"message": "User not found"}), status=404, mimetype="application/json")
-
-#         # Get the updated data from the request
-#         updated_data = request.get_json()
-#         print(updated_data)
-
-#         # Update the user's fields
-#         if "name" in updated_data:
-#             existing_user["name"] = updated_data["name"]
-#         if "username" in updated_data:
-#             existing_user["username"] = updated_data["username"]
-#         if "email" in updated_data:
-#             existing_user["email"] = updated_data["email"]
-#         if "street" in updated_data:
-#             existing_user["address"]["street"] = updated_data["street"]
-#         if "state" in updated_data:
-#             existing_user["address"]["state"] = updated_data["state"]
-#         if "zipcode" in updated_data:
-#             existing_user["zipcode"] = updated_data["zipcode"]
-#         if "lat" in updated_data:
-#             existing_user["address"]["geo"]["lat"] = updated_data["lat"]
-#         if "lng" in updated_data:
-#             existing_user["address"]["geo"]["lng"] = updated_data["lng"]
-
-#         # Save the updated user
-#         user_collection.update_one({"userid": userid}, {"$set": existing_user})
-
-#         return Response(response=json.dumps({"message": "User updated successfully"}), status=200, mimetype="application/json")
-
-#     except Exception as e:
-#         print("Exception occurred: {}".format(e))
-#         return Response(response=json.dumps({"message": "Failed to update user"}), status=500, mimetype="application/json")
-
-
-####################################################################
- #################### below is the endpoint for Search ######################### 
-####################################################################
-        
-# commenting this because search api implemented below for pg/search
-
-# @app.route('/search', methods=['GET'])
-# def search():
-#     try:
-#         query = request.args.get("query")
-#         # Use the $text operator for text search
-#         services_data = list(services_collection.find({
-#             "$text": {
-#                 "$search": query,
-#                 "$language": "english",
-#                 "$caseSensitive": False,
-#             }
-#         }))
-
-#         # Calculate the average rating for each service and include location
-#         for service in services_data:
-#             service_id = service['business_uid']
-#             comments = list(service_comments_collection.find({"business_uid": service_id}))
-#             # Extract ratings from the nested 'reviews' field
-#             ratings = [review['rating'] for comment in comments for review in comment.get('reviews', []) if 'rating' in review]
-#             if ratings:
-#                 average_rating = sum(ratings) / len(ratings)
-#                 service['average_rating'] = round(average_rating, 1)
-#             else:
-#                 service['average_rating'] = 0  # No ratings available
-#             # Include the location field from the service document
-#             service['country'] = service.get('country')
-
-#         for result in services_data:
-#             result["_id"] = str(result["_id"])
-
-#         return Response(response=json.dumps(services_data), status=200, mimetype="application/json")
-
-#     except Exception as e:
-#         print(f"Search error: {e}")  # Debug print
-#         return Response(response=json.dumps({"message": "Error in search"}), status=500, mimetype="application/json")
-
-
 ####################################################################
 ##################      services        #################
 ####################################################################
 
 ################ get all services ######################
-@app.route('/services',methods=["GET","POST"])
+# @app.route('/services',methods=["GET"])
+# def services():
+#     if request.method=='GET':
+#         try:
+#             data = list(services_collection.find())
+#             import pdb; pdb.set_trace()
+#             for users in data:
+#                 users["_id"]= str(users["_id"])
+#             # response_data = {"services": data, "categories": list(categories), "subcategories": list(subcategories)}
+#             return Response(response = json.dumps(data),status = 200,mimetype="application/json")               
+#         except:
+#             return Response(response = json.dumps({"message":"no data available"}),status = 500,mimetype="application/json")
+        
+        
+#  example       
+# http://127.0.0.1:5000/mongo/business?business_uid=BOORET54634567890121
+
+@app.route('/mongo/business', methods=["GET"])
 def services():
-    if request.method=='GET':
+    if request.method == 'GET':
         try:
-            data = list(services_collection.find())
-            for users in data:
-                users["_id"]= str(users["_id"])
-            # response_data = {"services": data, "categories": list(categories), "subcategories": list(subcategories)}
-            return Response(response = json.dumps(data),status = 200,mimetype="application/json")
-        
-        
-        except:
-            return Response(response = json.dumps({"message":"no data available"}),status = 500,mimetype="application/json")
-        
-    # if request.method=='POST':
-    #     try:
-    #         business_name = request.form['business_name']
-    #         business_description = request.form['business_description']
-    #         contact_information = request.form['contact_information']
-    #         country = request.form['country']
-    #         category = request.form['category']
-    #         sub_category = request.form['sub_category']
-    #         latitude = request.form['latitude']
-    #         longitude = request.form['longitude']
-    #         profile_image = request.files['profile_image']
+            # Extracting business_uid if provided in the query parameters
+            business_uid = request.args.get('business_uid')
+            # import pdb; pdb.set_trace()
 
+            # Query MongoDB based on business_uid if provided
+            if business_uid:
+                data = services_collection.find_one({"business_uid": business_uid}, {"_id": 0})
+            else:
+                data = services_collection.find_one({}, {"_id": 0})
 
-    #         service_fields = {}
-    #         blob_urls = []
+            return jsonify(data) if data else Response(response=json.dumps({"message": "No data found"}), status=404, mimetype="application/json")
+        except Exception as e:
+            return Response(response=json.dumps({"message": "Error occurred: " + str(e)}), status=500, mimetype="application/json")
 
-    #         if business_name:
-    #             service_fields["business_name"] = business_name
-    #         if business_description:
-    #             service_fields["business_description"] = business_description
-    #         if contact_information:
-    #             service_fields["contact_information"] = contact_information
-    #         if country:
-    #             service_fields["country"] = country
-    #         if category:
-    #             service_fields["category"] = category
-    #         if sub_category:
-    #             service_fields["sub_category"] = sub_category
-    #         if latitude:
-    #             service_fields["latitude"] = latitude
-    #         if longitude:
-    #             service_fields["longitude"] = longitude
-
-    #         if 'profile_image' in request.files:
-    #             profile_image = request.files['profile_image']
-    #             filename = profile_image.filename
-    #             print("filename")
-    #             print(filename)
-    #             print(timestamp)
-    #             blob_name = str(timestamp) + '_' + filename
-    #             blob_client = container_client.get_blob_client(blob_name)
-    #             blob_client.upload_blob(profile_image.read())
-    #             blob_url = blob_client.url
-    #             service_fields["profile_image"] = blob_url
-
-
-
-
-    #         if 'images' in request.files:
-    #             for file in request.files.getlist('images'):
-    #                 filename = file.filename
-    #                 file_extension = filename.split('.')[-1]
-    #                 blob_name = str(timestamp) + '_' + filename
-    #                 blob_client = container_client.get_blob_client(blob_name)
-
-    #                 blob_client.upload_blob(file.read())
-    #                 blob_urls.append(blob_client.url)
-
-    #         service_fields["images"] = blob_urls
-    #         # if sub_catagory:
-    #         #     service_fields["images"] = sub_catagory
-
-
-    #         services_collection.insert_one(service_fields)
-    #         print("blob_urls {}".format(blob_urls))
-
-    #         return jsonify({'message': 'Service added successfully.'}), 200
-    
-        # except Exception as e:
-        #     return  jsonify({'message': f'Error adding service: {str(e)}'}), 500
 
 # -----------------------------------------------------------------------
 #       depcricated below api and implemented same for postgres
