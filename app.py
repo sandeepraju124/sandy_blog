@@ -11,6 +11,8 @@ from datetime import datetime
 import uuid
 import pytz
 import psycopg2
+from azure.core.exceptions import ResourceNotFoundError
+
 
 
 # client = pymongo.MongoClient("mongodb://127.0.0.1:27017/")
@@ -288,8 +290,8 @@ def singleuserid(userid):
         
 #  example       
 # http://127.0.0.1:5000/mongo/business?business_uid=BOORET54634567890121
-
-@app.route('/mongo/business', methods=["GET"])
+# inuse
+@app.route('/mongo/business', methods=["GET","DELETE"])
 def services():
     if request.method == 'GET':
         try:
@@ -304,6 +306,24 @@ def services():
                 data = services_collection.find_one({}, {"_id": 0})
 
             return jsonify(data) if data else Response(response=json.dumps({"message": "No data found"}), status=404, mimetype="application/json")
+        except Exception as e:
+            return Response(response=json.dumps({"message": "Error occurred: " + str(e)}), status=500, mimetype="application/json")
+        
+    elif request.method == 'DELETE':
+        try:
+            business_uid = request.args.get('business_uid')
+            image_url = request.args.get('image_url')
+            if business_uid and image_url:
+                status = delete_from_azure(image_url)
+                if status:
+                # Delete the image from the list of images in the document
+                    result = services_collection.update_one({"business_uid": business_uid}, {"$pull": {"images": image_url}})
+                    if result.modified_count > 0:
+                        return jsonify({"message": "Image deleted successfully"})
+                    else:
+                        return Response(response=json.dumps({"message": "Image not found or already deleted"}), status=404, mimetype="application/json")
+            else:
+                return Response(response=json.dumps({"message": "Missing business_uid or image_url"}), status=400, mimetype="application/json")
         except Exception as e:
             return Response(response=json.dumps({"message": "Error occurred: " + str(e)}), status=500, mimetype="application/json")
 
@@ -1139,6 +1159,27 @@ def upload_to_azure(file,business_uid):
     blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
     blob_client.upload_blob(file)
     return blob_client.url
+
+def delete_from_azure(blob_url):
+    connection_string = "DefaultEndpointsProtocol=https;AccountName=chambersafe;AccountKey=LU8ZPmbxH6yALstQxEDxCaoPfS3VEWut06bqEOdwxRiukEm7sgQOkLPflx++XGEwOuSnYlvwo1G5+ASt8lszfA==;EndpointSuffix=core.windows.net"
+    container_name = "slytherinsafestorage"
+    # Extract blob name from blob URL
+    blob_name = blob_url.split("/")[-1]
+
+    blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+    blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+    try:
+        blob_client.delete_blob()
+        return True
+    except ResourceNotFoundError:
+        return False
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+        return False
+        
+    
+# import pdb; pdb.set_trace()
+# delete_from_azure("https://chambersafe.blob.core.windows.net/slytherinsafestorage/-uuid1271c3ac462-a433-4108-8a74-b04239d0a0f3.jpg")
  
 # @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -1260,8 +1301,7 @@ def get_category():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-    
-
+#  inuse
 @app.route('/pg/business/house-data', methods=['GET'])
 def get_house_data():
     try:
@@ -1279,7 +1319,6 @@ def get_house_data():
             WHERE {' AND '.join([f"house.{key} = %s" for key in query_params])}
             
         """
-
 
             
         # Execute the query with parameters
