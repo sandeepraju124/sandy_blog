@@ -1241,26 +1241,76 @@ def get_business():
 # ////////////////////////// testing above methpost method to upload image as well ////////////////
 
 # Endpoint to retrieve filter data by passing params
+# @app.route('/pg/business/where', methods=['GET'])
+# def get_category():
+#     try:
+#         base_query = "SELECT * FROM business WHERE"
+#         filters = request.args
+#         print(f"filters {filters.values()}") #ImmutableMultiDict([('category', 'food')])
+#         where_clause = " AND ".join([f"{key} = %s" for key in filters.keys()]) # category = %s
+#         print(f"where_clause {where_clause}")
+#         full_query = f"{base_query} {where_clause};" if where_clause else f"{base_query} {full_query}"
+#         result = execute_query(full_query, tuple(filters.values()))
+
+
+#         # query = "SELECT * FROM business WHERE category = '{}';".format(category)
+#         # result = execute_query(query)
+#         return jsonify(result)
+
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
+
 @app.route('/pg/business/where', methods=['GET'])
 def get_category():
     try:
         base_query = "SELECT * FROM business WHERE"
         filters = request.args
-        print(f"filters {filters.values()}") #ImmutableMultiDict([('category', 'food')])
-        where_clause = " AND ".join([f"{key} = %s" for key in filters.keys()]) # category = %s
+        print(f"filters {filters.values()}")  # ImmutableMultiDict([('category', 'food')])
+        where_clause = " AND ".join([f"{key} = %s" for key in filters.keys()])  # category = %s
         print(f"where_clause {where_clause}")
-        full_query = f"{base_query} {where_clause};" if where_clause else f"{base_query} {full_query}"
+        full_query = f"{base_query} {where_clause};" if where_clause else base_query
         result = execute_query(full_query, tuple(filters.values()))
 
-
-        # query = "SELECT * FROM business WHERE category = '{}';".format(category)
-        # result = execute_query(query)
         return jsonify(result)
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # Log the error for debugging purposes
+        print(f"Error executing query: {e}")
+        # Return a generic error message to the client
+        return jsonify({'error': 'An error occurred while processing your request.'}), 500
 
     
+
+# @app.route('/pg/business/house-data', methods=['GET'])
+# def get_house_data():
+#     try:
+#         # Use all query parameters directly
+#         query_params = request.args.to_dict()
+
+
+#         # Define the SQL query
+#         # WHERE {' AND '.join([f"house.{key} = %s" for key in query_params])}
+#             # WHERE {' AND '.join([f"house.{key} = %s" for key in query_params])}
+#         query = f"""
+#             SELECT *
+#             FROM house
+#             JOIN business ON house.business_uid = business.business_uid
+#             WHERE {' AND '.join([f"house.{key} = %s" for key in query_params])}
+            
+#         """
+
+
+            
+#         # Execute the query with parameters
+#         result = execute_query(query, list(query_params.values()))
+
+#         # Return the data as JSON
+#         return jsonify(result)
+
+#     except Exception as e:
+#         # Handle errors
+#         print(f"Error: {e}")
+#         return jsonify({'error': 'Failed to retrieve house data'})
 
 @app.route('/pg/business/house-data', methods=['GET'])
 def get_house_data():
@@ -1268,22 +1318,55 @@ def get_house_data():
         # Use all query parameters directly
         query_params = request.args.to_dict()
 
+        # Define the SQL query with dynamic WHERE clause
+        conditions = []
+        values = []
+        for key, value in query_params.items():
+            if key == 'location':
+                conditions.append(f"house.{key} ILIKE %s")
+                values.append(f"%{value}%")
+            elif key == 'house_type':
+                conditions.append(f"house.{key} ILIKE %s")
+                values.append(f"{value}%")
+            elif key == 'price':
+                # Handle price range queries
+                if value.lower().startswith("less than"):
+                    conditions.append(f"house.{key} < %s")
+                    values.append(float(value.split(" ")[-1]))
+                elif value.lower().startswith("greater than"):
+                    conditions.append(f"house.{key} > %s")
+                    values.append(float(value.split(" ")[-1]))
+                else:
+                    conditions.append(f"house.{key} = %s")
+                    values.append(float(value))
+            elif key == 'bedrooms':
+                # Handle bedrooms range queries
+                if value.lower().startswith("less than"):
+                    conditions.append(f"house.{key} < %s")
+                    values.append(int(value.split(" ")[-1]))
+                elif value.lower().startswith("greater than"):
+                    conditions.append(f"house.{key} > %s")
+                    values.append(int(value.split(" ")[-1]))
+                else:
+                    conditions.append(f"house.{key} = %s")
+                    values.append(int(value))
+            # Add other condition handling as needed
 
-        # Define the SQL query
-        # WHERE {' AND '.join([f"house.{key} = %s" for key in query_params])}
-            # WHERE {' AND '.join([f"house.{key} = %s" for key in query_params])}
-        query = f"""
+        query = """
             SELECT *
             FROM house
             JOIN business ON house.business_uid = business.business_uid
-            WHERE {' AND '.join([f"house.{key} = %s" for key in query_params])}
-            
-        """
+            """
 
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
 
-            
         # Execute the query with parameters
-        result = execute_query(query, list(query_params.values()))
+        result = execute_query(query, values)
+
+        # Check if any results were returned
+        if not result:
+            return jsonify({'message': 'No results found with your filter'})
 
         # Return the data as JSON
         return jsonify(result)
@@ -1292,6 +1375,10 @@ def get_house_data():
         # Handle errors
         print(f"Error: {e}")
         return jsonify({'error': 'Failed to retrieve house data'})
+
+
+
+
 
 
 
