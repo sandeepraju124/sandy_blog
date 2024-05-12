@@ -1,3 +1,4 @@
+
 from json import dumps
 import os
 import tempfile
@@ -12,7 +13,6 @@ import uuid
 import pytz
 import psycopg2
 
-
 # client = pymongo.MongoClient("mongodb://127.0.0.1:27017/")
 client = pymongo.MongoClient("mongodb+srv://sAdmin:Astrophile_da0515@sr1.mongocluster.cosmos.azure.com/?tls=true&authMechanism=SCRAM-SHA-256&retrywrites=false&maxIdleTimeMS=120000")
 # client = pymongo.MongoClient("mongodb://sr2:RDbkYdz71xf7JNWS1xVsPhWB3L1jTBdfDTBe5HscwUHqHusxC5qpbTRFsJIdtoTmls1Zwldu27mPACDb2VEnzQ==@sr2.mongo.cosmos.azure.com:10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@sr2@")
@@ -26,10 +26,6 @@ services_collection = db.services
 askcommunity = db.ask_community
 business_categories_collection = db.business_categories
 
-
-
-
-
 # azure storage details
 account_name = 'prometheus1137'
 account_key = 'QeCd4oED1ZKVaP0W9ncB7KYUv9qulmESzjb6NCpJQ/OMBlY8eWiSau+Jvu8AMfpV2ce31T6I9Hhy+AStf6oPkg=='
@@ -40,8 +36,6 @@ print(int(time.time()))
 connection_string = f"DefaultEndpointsProtocol=https;AccountName={account_name};AccountKey={account_key};EndpointSuffix=core.windows.net"
 blob_service_client = BlobServiceClient.from_connection_string(connection_string)
 container_client = blob_service_client.get_container_client(container_name)
-
-
 
 # important
 # find with object id
@@ -77,11 +71,7 @@ def ourservices():
     
     return render_template('ourservices.html')
 
-
-
 ##########      GET  all the users        #################
-
-
 
 @app.route('/users',methods=["GET"])
 def users():
@@ -132,7 +122,6 @@ def rescomments():
         users["_id"]= str(users["_id"])
     return Response(response = json.dumps(data),status = 200,mimetype="application/json")
 
-
 @app.route('/rescomments/<uid>', methods=["GET"])
 def rescommentIdForComments(uid):
     try:
@@ -147,9 +136,6 @@ def rescommentIdForComments(uid):
         print("Exception occurred: {}".format(e))
         return Response(response=json.dumps({"message": "not found"}), status=500, mimetype="application/json")
 
-
-
-
 ##########      GET only 1 restaurent by providing restaurent name        #################
 
 @app.route("/rescommentname/<resname>",methods=["GET"])
@@ -159,9 +145,6 @@ def rescommentname(resname):
     # for users in data:
     data["_id"]= str(data["_id"])
     return Response(response = json.dumps(data),status = 200,mimetype="application/json")
-
-
-
 
 ####################################################################
 ##########      GET all user data        #################
@@ -189,11 +172,8 @@ def user():
     'dp': blob_url if blob_url else 0  # Inserting blob URL if it exists, else None
 })
 
-
         return dumps({'id': str(result.inserted_id)})
         # return Response(dumps({'id': str(result.inserted_id)}), headers=headers)
-
-
 
 ##########      GET only 1 user by providing user id(GET) and update user data(PUT)      #################
 
@@ -266,7 +246,6 @@ def singleuserid(userid):
             print("Exception occurred: {}".format(e))
             return Response(response=json.dumps({"message": "Failed to update user"}), status=500, mimetype="application/json")
 
-
 ####################################################################
 ##################      services        #################
 ####################################################################
@@ -306,7 +285,6 @@ def services():
             return jsonify(data) if data else Response(response=json.dumps({"message": "No data found"}), status=404, mimetype="application/json")
         except Exception as e:
             return Response(response=json.dumps({"message": "Error occurred: " + str(e)}), status=500, mimetype="application/json")
-
 
 # -----------------------------------------------------------------------
 #       depcricated below api and implemented same for postgres
@@ -363,11 +341,9 @@ def services():
 #         print("hitted exemption {}".format(e))
 #         return Response(response=json.dumps({"message": "not found"}), status=500, mimetype="application/json")
 
-
 # -----------------------------------------------------------------------
 
 # -----------------------------------------------------------------------
-
 
 ################ get business by uid ######################
 @app.route("/uid/<uid>",methods=["GET"])
@@ -393,15 +369,12 @@ def objid(objid):
             return Response(response=json.dumps({"message":"not found"}),status = 500,mimetype="application/json")
     
 
-
-
     
 
 ########################################################
 ################ user activity by userid #####################
 ########################################################
     
-
 
 @app.route('/user_activities/<user_id>', methods=['GET'])
 def get_user_activities(user_id):
@@ -444,7 +417,6 @@ def get_user_activities(user_id):
         return jsonify(activities)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 ########################################################
 ################ comment section #####################
@@ -500,7 +472,6 @@ def comments_uid(uid):
         return Response(response=json.dumps({"message": "Error fetching comments"}), status=500, mimetype="application/json")
 
 ################ post user comment ######################
-
 
 @app.route("/postcomment", methods=["POST"])
 def postcomment():
@@ -610,7 +581,6 @@ def edit_comment():
 
 ####################### Delete Comment Endpoint  ###########################
 
-
 @app.route("/deletecomment", methods=["DELETE"])
 def delete_comment():
     try:
@@ -643,11 +613,7 @@ def delete_comment():
         return jsonify({"error": str(e)}), 500
     
 
-
-
 ########################################### BACKEND APP #####################################
-
-
 
 ########################################### testing #####################################
 
@@ -673,7 +639,6 @@ def delete_comment():
 #         container_client = blob_service_client.get_container_client(container_name)
 #         blob_client = container_client.get_blob_client(blob_name)
 
-
 #         blob_client.upload_blob(file.read())
 #         blob_url = blob_client.url
 #         print(blob_url)
@@ -685,7 +650,6 @@ def delete_comment():
 
         
 #         return blob_url, 200 
-
 
 #     except Exception as e:
 #         return str(e), 500
@@ -714,7 +678,6 @@ def delete_comment():
 #     except Exception as e:
         return str(e), 500
     
-
 
 ########################################################
 ################ ask the community #####################
@@ -749,7 +712,6 @@ def ask_community_id(uid):
         print("hitted exemption {}".format(e))
         return Response(response=json.dumps({"message": "not found"}), status=500, mimetype="application/json")
 
-
 # //////////////// post question Ask community /////////////////////
 
     
@@ -781,7 +743,6 @@ def post_question():
         timezone = pytz.timezone('Asia/Kolkata')
         current_time = datetime.now(timezone).isoformat()
 
-
         # Create a new question document
         question_id = str(uuid.uuid4().hex[:10])
         new_question = {
@@ -806,8 +767,6 @@ def post_question():
         return jsonify({"error": str(e)}), 400
     
 
-
-
 ######################## Below Edit question endpoint ##########
 @app.route('/edit_question', methods=['PUT'])
 def edit_question():
@@ -831,7 +790,6 @@ def edit_question():
         timezone = pytz.timezone('Asia/Kolkata')
         current_time = datetime.now(timezone).isoformat()
 
-
         # Check if the question exists and if the userid matches
         question_found = False
         for question in business_data['data']:
@@ -852,7 +810,6 @@ def edit_question():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
     ################## Below delete question Endpoint #################
 @app.route('/delete_question', methods=['DELETE'])
@@ -892,7 +849,6 @@ def delete_question():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
     
 # //////////////// post answer Ask community /////////////////////
 
@@ -917,7 +873,6 @@ def post_answer():
             # Set the timezone to 'Asia/Kolkata' for Indian Standard Time
             timezone = pytz.timezone('Asia/Kolkata')
             current_time = datetime.now(timezone).isoformat()
-
 
             # Create a new answer document
             new_answer = {
@@ -945,8 +900,6 @@ def post_answer():
         return jsonify({"error": str(e)}), 400
     
 
-
-
 ########### Endpoint for Edit_Answer ########
     
 @app.route('/edit_answer', methods=['PUT'])
@@ -966,7 +919,6 @@ def edit_answer():
         timezone = pytz.timezone('Asia/Kolkata')
         current_time = datetime.now(timezone).isoformat()
 
-
         if business_data:
             for question in business_data['data']:
                 if question['qdetails']['questionid'] == question_id:
@@ -984,7 +936,6 @@ def edit_answer():
         return jsonify({"error": str(e)}), 500
     
 
-
 ######## Endpoint for Delete_Answer #########
     
 @app.route('/delete_answer', methods=['DELETE'])
@@ -999,7 +950,6 @@ def delete_answer():
             return jsonify({"error": "Missing required data"}), 400
 
         business_data = askcommunity.find_one({"business_uid": business_uid, "data.qdetails.questionid": question_id})  
-
 
         if business_data:
             for question in business_data['data']:
@@ -1051,7 +1001,6 @@ def post_multiple_images():
     
     return "Images uploaded successfully"
 
-
 @app.route('/overall_rating/<business_uid>', methods = ["GET"])
 def overall_rating(business_uid):
     # uid = user.get("business_uid")
@@ -1075,7 +1024,6 @@ def overall_rating(business_uid):
         return jsonify({"message": "No reviews available for this business."}), 200
     except Exception as e:
         return jsonify({"message": str(e)}), 500
-
 
 @app.route('/business_categories', methods=["GET"])
 def business_categories():
@@ -1128,7 +1076,6 @@ def execute_query(query, params=None):
         return result
     except Exception as e:
         raise e
-
 
 def upload_to_azure(file,business_uid):
     connection_string = "DefaultEndpointsProtocol=https;AccountName=chambersafe;AccountKey=LU8ZPmbxH6yALstQxEDxCaoPfS3VEWut06bqEOdwxRiukEm7sgQOkLPflx++XGEwOuSnYlvwo1G5+ASt8lszfA==;EndpointSuffix=core.windows.net"
@@ -1216,7 +1163,6 @@ def get_business():
 #     return blob_client.url
  
 
-
 # @app.route("/testingdataimageupdate",methods = ['POST'])
 # def testingdataimageupdate():
 #     try:
@@ -1235,9 +1181,6 @@ def get_business():
 #     except Exception as e:
 #         return jsonify({'error': str(e)}), 500
 
-
-
-
 # ////////////////////////// testing above methpost method to upload image as well ////////////////
 
 # Endpoint to retrieve filter data by passing params
@@ -1251,7 +1194,6 @@ def get_business():
 #         print(f"where_clause {where_clause}")
 #         full_query = f"{base_query} {where_clause};" if where_clause else f"{base_query} {full_query}"
 #         result = execute_query(full_query, tuple(filters.values()))
-
 
 #         # query = "SELECT * FROM business WHERE category = '{}';".format(category)
 #         # result = execute_query(query)
@@ -1287,7 +1229,6 @@ def get_category():
 #         # Use all query parameters directly
 #         query_params = request.args.to_dict()
 
-
 #         # Define the SQL query
 #         # WHERE {' AND '.join([f"house.{key} = %s" for key in query_params])}
 #             # WHERE {' AND '.join([f"house.{key} = %s" for key in query_params])}
@@ -1298,7 +1239,6 @@ def get_category():
 #             WHERE {' AND '.join([f"house.{key} = %s" for key in query_params])}
             
 #         """
-
 
             
 #         # Execute the query with parameters
@@ -1376,12 +1316,6 @@ def get_house_data():
         print(f"Error: {e}")
         return jsonify({'error': 'Failed to retrieve house data'})
 
-
-
-
-
-
-
 # get data based on lat and lang
 
     
@@ -1440,11 +1374,7 @@ def businessforlatlong():
     # Return the results
     return jsonify(result)
 
-
-
    
-
-
 
 # search
 # API endpoint for searching businesses
@@ -1538,9 +1468,6 @@ def fullsearch_business():
         return jsonify(serialized_results)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-
-
 
 ######################################################
 # |||||||   POSTGRESS REST APIS  |||||||||||
