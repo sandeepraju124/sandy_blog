@@ -1036,40 +1036,78 @@ def delete_answer():
         return jsonify({"error": str(e)}), 500
     
 
-@app.route('/post_multiple_images', methods = ["POST"])
+# @app.route('/post_multiple_images', methods = ["POST"])
+# def post_multiple_images():
+#     business_uid = request.form.get("business_uid")
+#     if not business_uid:
+#         return 'no business uid provided'
+#     if 'images' not in request.files:
+#         return 'No file part'
+#     files = request.files.getlist('images')
+#     # aadhar_front = request.files.get("aadhar_front")
+#     # aadhar_back = request.files.get("aadhar_front")
+#     images_list = []
+#     print(business_uid) 
+#     for file in files:
+#         file_url = upload_to_azure(file,business_uid=business_uid)
+#         images_list.append(file_url)
+#         # print(file_url)
+#     existing_business = services_collection.find_one({'business_uid':business_uid})
+#     if existing_business:
+#         update_data = {'images': images_list}
+#         services_collection.update_one({'business_uid': business_uid}, {'$set': update_data})
+#     else:
+#         data_to_insert = {'business_uid': business_uid, 'images': images_list}
+#         if "aadhar_front" in request.files:
+#             aadhar_front = request.files.get("aadhar_front")
+#             aadhar_back = request.files.get("aadhar_back")
+#             print(aadhar_front)
+#             aadhar_front_url = upload_to_azure(aadhar_front, business_uid)
+#             aadhar_back_url = upload_to_azure(aadhar_back, business_uid)
+#             print(aadhar_front_url)
+#             data_to_insert['aadhar_front'] = aadhar_front_url
+#             data_to_insert['aadhar_back'] = aadhar_back_url
+#         services_collection.insert_one(data_to_insert)    
+    
+#     return "Images uploaded successfully"
+
+
+@app.route('/post_multiple_images', methods=["POST"])
 def post_multiple_images():
     business_uid = request.form.get("business_uid")
     if not business_uid:
         return 'no business uid provided'
     if 'images' not in request.files:
         return 'No file part'
+
     files = request.files.getlist('images')
-    # aadhar_front = request.files.get("aadhar_front")
-    # aadhar_back = request.files.get("aadhar_front")
     images_list = []
-    print(business_uid) 
+
     for file in files:
-        file_url = upload_to_azure(file,business_uid=business_uid)
+        file_url = upload_to_azure(file, business_uid=business_uid)
         images_list.append(file_url)
-        # print(file_url)
-    existing_business = services_collection.find_one({'business_uid':business_uid})
+
+    existing_business = services_collection.find_one({'business_uid': business_uid})
+
     if existing_business:
-        update_data = {'images': images_list}
-        services_collection.update_one({'business_uid': business_uid}, {'$set': update_data})
+        # If business exists, update the images list
+        existing_images = existing_business.get('images', [])
+        updated_images = existing_images + images_list
+        services_collection.update_one({'_id': ObjectId(existing_business['_id'])}, {'$set': {'images': updated_images}})
     else:
+        # If business doesn't exist, insert new record
         data_to_insert = {'business_uid': business_uid, 'images': images_list}
         if "aadhar_front" in request.files:
             aadhar_front = request.files.get("aadhar_front")
             aadhar_back = request.files.get("aadhar_back")
-            print(aadhar_front)
             aadhar_front_url = upload_to_azure(aadhar_front, business_uid)
             aadhar_back_url = upload_to_azure(aadhar_back, business_uid)
-            print(aadhar_front_url)
             data_to_insert['aadhar_front'] = aadhar_front_url
             data_to_insert['aadhar_back'] = aadhar_back_url
-        services_collection.insert_one(data_to_insert)    
-    
+        services_collection.insert_one(data_to_insert)
+
     return "Images uploaded successfully"
+
 
 
 @app.route('/overall_rating/<business_uid>', methods = ["GET"])
