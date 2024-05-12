@@ -1339,28 +1339,62 @@ def get_category():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-#  inuse
+
 @app.route('/pg/business/house-data', methods=['GET'])
 def get_house_data():
     try:
         # Use all query parameters directly
         query_params = request.args.to_dict()
 
+        # Define the SQL query with dynamic WHERE clause
+        conditions = []
+        values = []
+        for key, value in query_params.items():
+            if key == 'location':
+                conditions.append(f"house.{key} ILIKE %s")
+                values.append(f"%{value}%")
+            elif key == 'house_type':
+                conditions.append(f"house.{key} ILIKE %s")
+                values.append(f"{value}%")
+            elif key == 'price':
+                # Handle price range queries
+                if value.lower().startswith("less than"):
+                    conditions.append(f"house.{key} < %s")
+                    values.append(float(value.split(" ")[-1]))
+                elif value.lower().startswith("greater than"):
+                    conditions.append(f"house.{key} > %s")
+                    values.append(float(value.split(" ")[-1]))
+                else:
+                    conditions.append(f"house.{key} = %s")
+                    values.append(float(value))
+            elif key == 'bedrooms':
+                # Handle bedrooms range queries
+                if value.lower().startswith("less than"):
+                    conditions.append(f"house.{key} < %s")
+                    values.append(int(value.split(" ")[-1]))
+                elif value.lower().startswith("greater than"):
+                    conditions.append(f"house.{key} > %s")
+                    values.append(int(value.split(" ")[-1]))
+                else:
+                    conditions.append(f"house.{key} = %s")
+                    values.append(int(value))
+            # Add other condition handling as needed
 
-        # Define the SQL query
-        # WHERE {' AND '.join([f"house.{key} = %s" for key in query_params])}
-            # WHERE {' AND '.join([f"house.{key} = %s" for key in query_params])}
-        query = f"""
+        query = """
             SELECT *
             FROM house
             JOIN business ON house.business_uid = business.business_uid
-            WHERE {' AND '.join([f"house.{key} = %s" for key in query_params])}
-            
-        """
+            """
 
-            
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
+
         # Execute the query with parameters
-        result = execute_query(query, list(query_params.values()))
+        result = execute_query(query, values)
+
+        # Check if any results were returned
+        if not result:
+            return jsonify({'message': 'No results found with your filter'})
 
         # Return the data as JSON
         return jsonify(result)
