@@ -314,10 +314,11 @@ def services():
             # Extract data from the request
             data = request.json
             business_uid = data.get('business_uid')
-            amenities = data.get('amenities')
+            amenitiesToAddOrUpdate = data.get('amenitiesToAddOrUpdate', [])
+            amenitiesToRemove = data.get('amenitiesToRemove', [])
 
-            if business_uid is None or amenities is None:
-                return Response(response=json.dumps({"message": "Missing business_uid or amenities in request"}), status=400, mimetype="application/json")
+            if business_uid is None:
+                return Response(response=json.dumps({"message": "Missing business_uid in request"}), status=400, mimetype="application/json")
 
             # Check if the business exists
             existing_business = services_collection.find_one({"business_uid": business_uid})
@@ -327,11 +328,12 @@ def services():
                 existing_amenities = existing_business.get('amenities', [])
 
                 # Update existing amenities
-                for amenity in amenities:
+                for amenity in amenitiesToAddOrUpdate:
+                    if amenity not in existing_amenities:
+                        existing_amenities.append(amenity)
+                for amenity in amenitiesToRemove:
                     if amenity in existing_amenities:
                         existing_amenities.remove(amenity)
-                    else:
-                        existing_amenities.append(amenity)
 
                 # Update the document in the collection
                 services_collection.update_one({"business_uid": business_uid}, {"$set": {"amenities": existing_amenities}})
@@ -342,6 +344,7 @@ def services():
                 return Response(response=json.dumps({"message": "New business added with amenities"}), status=201, mimetype="application/json")
         except Exception as e:
             return Response(response=json.dumps({"message": "Error occurred: " + str(e)}), status=500, mimetype="application/json")
+
 
         
     elif request.method == 'DELETE':
