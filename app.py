@@ -291,7 +291,7 @@ def singleuserid(userid):
 #  example       
 # http://127.0.0.1:5000/mongo/business?business_uid=BOORET54634567890121
 # inuse
-@app.route('/mongo/business', methods=["GET","DELETE"])
+@app.route('/mongo/business', methods=["GET","POST","DELETE"])
 def services():
     if request.method == 'GET':
         try:
@@ -306,6 +306,30 @@ def services():
                 data = services_collection.find_one({}, {"_id": 0})
 
             return jsonify(data) if data else Response(response=json.dumps({"message": "No data found"}), status=404, mimetype="application/json")
+        except Exception as e:
+            return Response(response=json.dumps({"message": "Error occurred: " + str(e)}), status=500, mimetype="application/json")
+        
+    elif request.method == 'POST':
+        try:
+            # Extract data from the request
+            data = request.json
+            business_uid = data.get('business_uid')
+            amenities = data.get('amenities')
+
+            if business_uid and amenities:
+                # Check if the business exists
+                existing_business = services_collection.find_one({"business_uid": business_uid})
+
+                if existing_business:
+                    # Update existing amenities
+                    services_collection.update_one({"business_uid": business_uid}, {"$addToSet": {"amenities": {"$each": amenities}}})
+                    return Response(response=json.dumps({"message": "Amenities updated successfully"}), status=200, mimetype="application/json")
+                else:
+                    # Create a new entry for the business
+                    services_collection.insert_one(data)
+                    return Response(response=json.dumps({"message": "New business added with amenities"}), status=201, mimetype="application/json")
+            else:
+                return Response(response=json.dumps({"message": "Missing business_uid or amenities in request"}), status=400, mimetype="application/json")
         except Exception as e:
             return Response(response=json.dumps({"message": "Error occurred: " + str(e)}), status=500, mimetype="application/json")
         
