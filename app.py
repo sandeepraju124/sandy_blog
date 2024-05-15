@@ -7,11 +7,12 @@ from flask import render_template, request, Response
 from bson.objectid import ObjectId
 from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient, ContentSettings
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 import uuid
 import pytz
 import psycopg2
 from azure.core.exceptions import ResourceNotFoundError
+from collections import defaultdict
 
 
 
@@ -1148,23 +1149,110 @@ def post_multiple_images():
 
 
 
-@app.route('/overall_rating/<business_uid>', methods = ["GET"])
-def overall_rating(business_uid):
-    # uid = user.get("business_uid")
+# @app.route('/overall_rating/<business_uid>', methods = ["GET"])
+# def overall_rating(business_uid):
+#     # uid = user.get("business_uid")
+#     try:
+#         comment_data = service_comments_collection.find_one({"business_uid": business_uid})
+#         print("")
+#         if comment_data:
+#             reviews = comment_data.get("reviews", [])
+#             overall_rating = sum(review.get("rating", 0) for review in reviews) / len(reviews) if reviews else 0
+#             reviews_count = len(reviews)
+#             overall_rating = round(overall_rating, 1)
+#             return jsonify({"overall_rating": overall_rating, "reviews_count": reviews_count}), 200
+#             # filtered_user["reviews_length"] = len(reviews)
+#         else:
+#             # overall_rating = 0
+#             return jsonify({"message": "No reviews available for this business.", "overall_rating": 0, "reviews_count": 0}), 200
+#         # return jsonify(overall_rating), 200
+#     except KeyError:
+#         return jsonify({"message": "Key error occurred. Invalid data structure."}), 500
+#     except ZeroDivisionError:
+#         return jsonify({"message": "No reviews available for this business."}), 200
+#     except Exception as e:
+#         return jsonify({"message": str(e)}), 500
+
+
+
+
+# @app.route('/overall_rating/<business_uid>/<span>', methods=["GET"])
+# def overall_rating(business_uid,span):
+#     try:
+#         # import pdb; pdb.set_trace()
+#         span = int(span)
+#         comment_data = service_comments_collection.find_one({"business_uid": business_uid})
+#         if comment_data:
+#             reviews = comment_data.get("reviews", [])
+#             overall_rating = sum(review.get("rating", 0) for review in reviews) / len(reviews) if reviews else 0
+#             reviews_count = len(reviews)
+#             overall_rating = round(overall_rating, 1)
+            
+#             # Get recent 5 months data
+#             monthly_data = {}
+#             current_month = datetime.now(pytz.utc).month
+#             # current_month = 2
+#             current_year = datetime.now(pytz.utc).year
+#             for i in range(span):
+#                 month_year = (current_month, current_year)
+#                 month_data = [review for review in reviews if datetime.strptime(review["created_at"].split("+")[0], "%Y-%m-%dT%H:%M:%S.%f")\
+#                               .month == current_month and datetime.strptime(review["created_at"].split("+")[0], "%Y-%m-%dT%H:%M:%S.%f")\
+#                               .year == current_year]
+#                 monthly_rating = sum(review.get("rating", 0) for review in month_data) / len(month_data) if month_data else 0
+#                 monthly_reviews_count = len(month_data)
+#                 monthly_data[f"{current_year}-{current_month}"] = {"monthly_rating": round(monthly_rating, 1), "monthly_reviews_count": monthly_reviews_count}
+#                 current_month -= 1
+#                 if current_month == 0:
+#                     current_month = 12
+#                     current_year -= 1
+
+#             return jsonify({"overall_rating": overall_rating, "reviews_count": reviews_count, "monthly_data": monthly_data}), 200
+#         else:
+#             return jsonify({"message": "No reviews available for this business.", "overall_rating": 0, "reviews_count": 0, "monthly_data": {}}), 200
+#     except KeyError:
+#         return jsonify({"message": "Key error occurred. Invalid data structure."}), 500
+#     except ZeroDivisionError:
+#         return jsonify({"message": "No reviews available for this business."}), 200
+#     except Exception as e:
+#         return jsonify({"message": str(e)}), 500
+
+
+@app.route('/overall_rating/<business_uid>/', defaults={'span': None}, methods=["GET"])
+@app.route('/overall_rating/<business_uid>/<int:span>', methods=["GET"])
+def overall_rating(business_uid, span):
     try:
         comment_data = service_comments_collection.find_one({"business_uid": business_uid})
-        print("")
         if comment_data:
             reviews = comment_data.get("reviews", [])
             overall_rating = sum(review.get("rating", 0) for review in reviews) / len(reviews) if reviews else 0
             reviews_count = len(reviews)
             overall_rating = round(overall_rating, 1)
-            return jsonify({"overall_rating": overall_rating, "reviews_count": reviews_count}), 200
-            # filtered_user["reviews_length"] = len(reviews)
+
+            if span is not None:
+                # Get recent `span` months data
+                monthly_data = {}
+                current_month = datetime.now(pytz.utc).month
+                # current_month = 2
+                current_year = datetime.now(pytz.utc).year
+
+                for i in range(span):
+                    month_data = [review for review in reviews if datetime.strptime(review["created_at"].split("+")[0], "%Y-%m-%dT%H:%M:%S.%f").month == current_month and datetime.strptime(review["created_at"].split("+")[0], "%Y-%m-%dT%H:%M:%S.%f").year == current_year]
+                    monthly_rating = sum(review.get("rating", 0) for review in month_data) / len(month_data) if month_data else 0
+                    monthly_reviews_count = len(month_data)
+                    monthly_data[f"{current_year}-{current_month}"] = {"monthly_rating": round(monthly_rating, 1), "monthly_reviews_count": monthly_reviews_count}
+                    current_month -= 1
+                    if current_month == 0:
+                        current_month = 12
+                        current_year -= 1
+
+                return jsonify({"overall_rating": overall_rating, "reviews_count": reviews_count, "monthly_data": monthly_data}), 200
+            else:
+                return jsonify({"overall_rating": overall_rating, "reviews_count": reviews_count}), 200
         else:
-            # overall_rating = 0
-            return jsonify({"message": "No reviews available for this business.", "overall_rating": 0, "reviews_count": 0}), 200
-        # return jsonify(overall_rating), 200
+            if span is not None:
+                return jsonify({"message": "No reviews available for this business.", "overall_rating": 0, "reviews_count": 0, "monthly_data": {}}), 200
+            else:
+                return jsonify({"message": "No reviews available for this business.", "overall_rating": 0, "reviews_count": 0}), 200
     except KeyError:
         return jsonify({"message": "Key error occurred. Invalid data structure."}), 500
     except ZeroDivisionError:
