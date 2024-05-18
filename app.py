@@ -945,7 +945,6 @@ def add_data():
         now = datetime.utcnow()
         monthly_data = defaultdict(dict)
         overall_count = insights.count_documents({'business_id': business_id})
-        import pdb;pdb.set_trace()
         for i in range(1, 6):
             start_of_month = datetime(now.year, now.month - i + 1, 1)
             start_of_next_month = datetime(now.year, now.month - i + 2, 1) if now.month - i + 1 < 12 else datetime(now.year + 1, 1, 1)
