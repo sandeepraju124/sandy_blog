@@ -28,6 +28,7 @@ user_collection = db.users
 services_collection = db.services
 askcommunity = db.ask_community
 business_categories_collection = db.business_categories
+insights = db.insights
 
 
 
@@ -274,20 +275,7 @@ def singleuserid(userid):
 ##################      services        #################
 ####################################################################
 
-################ get all services ######################
-# @app.route('/services',methods=["GET"])
-# def services():
-#     if request.method=='GET':
-#         try:
-#             data = list(services_collection.find())
-#             import pdb; pdb.set_trace()
-#             for users in data:
-#                 users["_id"]= str(users["_id"])
-#             # response_data = {"services": data, "categories": list(categories), "subcategories": list(subcategories)}
-#             return Response(response = json.dumps(data),status = 200,mimetype="application/json")               
-#         except:
-#             return Response(response = json.dumps({"message":"no data available"}),status = 500,mimetype="application/json")
-        
+
         
 #  example       
 # http://127.0.0.1:5000/mongo/business?business_uid=BOORET54634567890121
@@ -367,65 +355,6 @@ def services():
             return Response(response=json.dumps({"message": "Error occurred: " + str(e)}), status=500, mimetype="application/json")
 
 
-# -----------------------------------------------------------------------
-#       depcricated below api and implemented same for postgres
-# -----------------------------------------------------------------------
-
-# ################ get business by category ######################
-# @app.route("/category/<category>",methods=["GET"])
-# def category(category):
-#     try:
-#         data = list(services_collection.find({"category": category}))
-#         for users in data:
-#             users["_id"]= str(users["_id"])
-#         # categories = set(service['category'] for service in data)
-#         subcategories = set(service['sub_category'] for service in data)
-#         response_data = {"services": data,"subcategories": list(subcategories)}
-#         return Response(response=json.dumps(response_data), status=200, mimetype="application/json")
-#     except Exception as e:
-#             print("hitted exemption {}".format(e))
-#             return Response(response=json.dumps({"message":"not found"}),status = 500,mimetype="application/json")
-    
-# ################ get business by subcategory ######################
-# from bson import ObjectId
-
-# @app.route("/subcategory/<subcategory>", methods=["GET"])
-# def subcategory(subcategory):
-#     try:
-#         data = list(services_collection.find({"sub_category": subcategory}))
-#         filtered_data = []
-#         for user in data:
-#             filtered_user = {
-#                 # here we have only taken selected fields ignoring _id, images, etc add below if you want to add extar fields
-#                 "business_name": user.get("business_name"),
-#                 "business_uid": str(user.get("business_uid")),  # Convert ObjectId to string
-#                 "contact_information": user.get("contact_information"),
-#                 "profile_image": user.get("profile_image"),
-#                 "latitude": user.get("latitude"),
-#                 "longitude": user.get("longitude"),
-#                 "business_description": user.get("business_description"),
-#                 "reviews_length": 0
-#             }
-#             uid = user.get("business_uid")
-#             comment_data = service_comments_collection.find_one({"business_uid": uid})
-#             if comment_data:
-#                 reviews = comment_data.get("reviews", [])
-#                 overall_rating = sum(review.get("rating", 0) for review in reviews) / len(reviews) if reviews else 0
-#                 overall_rating = round(overall_rating, 1)
-#                 filtered_user["reviews_length"] = len(reviews)
-#             else:
-#                 overall_rating = 0
-#             filtered_user["overall_rating"] = overall_rating
-#             filtered_data.append(filtered_user)
-#         return Response(response=json.dumps(filtered_data), status=200, mimetype="application/json")
-#     except Exception as e:
-#         print("hitted exemption {}".format(e))
-#         return Response(response=json.dumps({"message": "not found"}), status=500, mimetype="application/json")
-
-
-# -----------------------------------------------------------------------
-
-# -----------------------------------------------------------------------
 
 
 ################ get business by uid ######################
@@ -702,76 +631,6 @@ def delete_comment():
         return jsonify({"error": str(e)}), 500
     
 
-
-
-########################################### BACKEND APP #####################################
-
-
-
-########################################### testing #####################################
-
-# commenting this because below azure upload function is created
-# @app.route('/uploadimage',methods=['POST'])
-# def upload_image():
-#     try:
-        
-#         file = request.files['image']
-#         # business_name = request.form['business_name']
-#         account_name = 'prometheus1137'
-#         account_key = 'QeCd4oED1ZKVaP0W9ncB7KYUv9qulmESzjb6NCpJQ/OMBlY8eWiSau+Jvu8AMfpV2ce31T6I9Hhy+AStf6oPkg=='
-#         container_name = 'sssv1'
-#         timestamp = time.time()
-#         timestamp_ms = int(timestamp * 1000)
-#         filename = file.filename
-#         file_extension = filename.split('.')[-1]
-#         blob_name = str(timestamp_ms) + '.' + file_extension
-#         connection_string = f"DefaultEndpointsProtocol=https;AccountName={account_name};AccountKey={account_key};EndpointSuffix=core.windows.net"
-#         # DefaultEndpointsProtocol=https;AccountName=prometheus1137;AccountKey=QeCd4oED1ZKVaP0W9ncB7KYUv9qulmESzjb6NCpJQ/OMBlY8eWiSau+Jvu8AMfpV2ce31T6I9Hhy+AStf6oPkg==;EndpointSuffix=core.windows.net
-        
-#         blob_service_client = BlobServiceClient.from_connection_string(connection_string)
-#         container_client = blob_service_client.get_container_client(container_name)
-#         blob_client = container_client.get_blob_client(blob_name)
-
-
-#         blob_client.upload_blob(file.read())
-#         blob_url = blob_client.url
-#         print(blob_url)
-
-#         # data = {'business_name': business_name, 'image_url': blob_url}
-#         data = {'image_url': blob_url}
-#         services_collection.insert_one(data)
- 
-
-        
-#         return blob_url, 200 
-
-
-#     except Exception as e:
-#         return str(e), 500
-
-# @app.route('/uploadmultipleimages', methods = ["POST"])
-# def upload_multiple_image():
-#     try:
-
-#         business_name = request.form['business_name']
-
-#         blob_urls = []
-#         for file in request.files.getlist('image'):
-#             filename = file.filename
-#             file_extension = filename.split('.')[-1]
-#             blob_name = str(timestamp) + '_' + filename
-#             blob_client = container_client.get_blob_client(blob_name)
-
-#             blob_client.upload_blob(file.read())
-#             blob_urls.append(blob_client.url)
-
-#             data = {'business_name': business_name, 'image_urls': blob_urls}
-#             services_collection.insert_one(data)
-
-#         return {'blob_urls': blob_urls}, 200
-
-#     except Exception as e:
-        return str(e), 500
     
 
 
@@ -1073,42 +932,85 @@ def delete_answer():
             return jsonify({"error": "Question not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
 
-# @app.route('/post_multiple_images', methods = ["POST"])
-# def post_multiple_images():
-#     business_uid = request.form.get("business_uid")
-#     if not business_uid:
-#         return 'no business uid provided'
-#     if 'images' not in request.files:
-#         return 'No file part'
-#     files = request.files.getlist('images')
-#     # aadhar_front = request.files.get("aadhar_front")
-#     # aadhar_back = request.files.get("aadhar_front")
-#     images_list = []
-#     print(business_uid) 
-#     for file in files:
-#         file_url = upload_to_azure(file,business_uid=business_uid)
-#         images_list.append(file_url)
-#         # print(file_url)
-#     existing_business = services_collection.find_one({'business_uid':business_uid})
-#     if existing_business:
-#         update_data = {'images': images_list}
-#         services_collection.update_one({'business_uid': business_uid}, {'$set': update_data})
-#     else:
-#         data_to_insert = {'business_uid': business_uid, 'images': images_list}
-#         if "aadhar_front" in request.files:
-#             aadhar_front = request.files.get("aadhar_front")
-#             aadhar_back = request.files.get("aadhar_back")
-#             print(aadhar_front)
-#             aadhar_front_url = upload_to_azure(aadhar_front, business_uid)
-#             aadhar_back_url = upload_to_azure(aadhar_back, business_uid)
-#             print(aadhar_front_url)
-#             data_to_insert['aadhar_front'] = aadhar_front_url
-#             data_to_insert['aadhar_back'] = aadhar_back_url
-#         services_collection.insert_one(data_to_insert)    
+
+#################  ##################
+#              Insights
+#################  ##################
+
+@app.route('/provile_visit', methods=['GET','POST'])
+def add_data():
+    if request.method == 'GET':
+        business_id = request.args.get('business_id')
+        now = datetime.utcnow()
+        monthly_data = defaultdict(dict)
+        overall_count = insights.count_documents({'business_id': business_id})
+        import pdb;pdb.set_trace()
+        for i in range(1, 6):
+            start_of_month = datetime(now.year, now.month - i + 1, 1)
+            start_of_next_month = datetime(now.year, now.month - i + 2, 1) if now.month - i + 1 < 12 else datetime(now.year + 1, 1, 1)
+            # Count the documents for the specific business_id within the current month
+            count = insights.count_documents({
+                'business_id': business_id,
+                'timestamp': {
+                    '$gte': start_of_month,
+                    '$lt': start_of_next_month
+                }
+            })
+
+            month_year = start_of_month.strftime('%Y-%m')
+            monthly_data[month_year]['monthly_views_count'] = count
+            # overall_count += count
+
+        return jsonify({
+            "monthly_data": monthly_data,
+            "overall_views": overall_count
+        }), 200
+        
     
-#     return "Images uploaded successfully"
+    elif request.method == 'POST':
+        data = request.json
+        if 'user_id' not in data or 'business_id' not in data:
+            return jsonify({"error": "Invalid data"}), 400
+
+        user_id = data['user_id']
+        business_id = data['business_id']
+
+        
+        today = datetime.utcnow()
+        start_of_day = datetime.combine(today, datetime.min.time())
+        end_of_day = datetime.combine(today, datetime.max.time())
+        
+        
+
+        # Check for existing records today
+        existing_record = insights.find_one({
+            'user_id': user_id,
+            'business_id': business_id,
+            'timestamp': {
+                '$gte': start_of_day,
+                '$lte': end_of_day
+            }
+        })
+
+        if existing_record:
+            return jsonify({"error": "User has already visited today"}), 409
+
+        data['timestamp'] = datetime.utcnow()
+
+        result = insights.insert_one(data)
+        return jsonify({"message": "Data inserted", "id": str(result.inserted_id)}), 201
+        
+
+
+
+
+
+#################  ##################
+#              Insights
+#################  ##################
+
+
 
 
 @app.route('/post_multiple_images', methods=["POST"])
@@ -1147,74 +1049,6 @@ def post_multiple_images():
 
     return "Images uploaded successfully"
 
-
-
-# @app.route('/overall_rating/<business_uid>', methods = ["GET"])
-# def overall_rating(business_uid):
-#     # uid = user.get("business_uid")
-#     try:
-#         comment_data = service_comments_collection.find_one({"business_uid": business_uid})
-#         print("")
-#         if comment_data:
-#             reviews = comment_data.get("reviews", [])
-#             overall_rating = sum(review.get("rating", 0) for review in reviews) / len(reviews) if reviews else 0
-#             reviews_count = len(reviews)
-#             overall_rating = round(overall_rating, 1)
-#             return jsonify({"overall_rating": overall_rating, "reviews_count": reviews_count}), 200
-#             # filtered_user["reviews_length"] = len(reviews)
-#         else:
-#             # overall_rating = 0
-#             return jsonify({"message": "No reviews available for this business.", "overall_rating": 0, "reviews_count": 0}), 200
-#         # return jsonify(overall_rating), 200
-#     except KeyError:
-#         return jsonify({"message": "Key error occurred. Invalid data structure."}), 500
-#     except ZeroDivisionError:
-#         return jsonify({"message": "No reviews available for this business."}), 200
-#     except Exception as e:
-#         return jsonify({"message": str(e)}), 500
-
-
-
-
-# @app.route('/overall_rating/<business_uid>/<span>', methods=["GET"])
-# def overall_rating(business_uid,span):
-#     try:
-#         # import pdb; pdb.set_trace()
-#         span = int(span)
-#         comment_data = service_comments_collection.find_one({"business_uid": business_uid})
-#         if comment_data:
-#             reviews = comment_data.get("reviews", [])
-#             overall_rating = sum(review.get("rating", 0) for review in reviews) / len(reviews) if reviews else 0
-#             reviews_count = len(reviews)
-#             overall_rating = round(overall_rating, 1)
-            
-#             # Get recent 5 months data
-#             monthly_data = {}
-#             current_month = datetime.now(pytz.utc).month
-#             # current_month = 2
-#             current_year = datetime.now(pytz.utc).year
-#             for i in range(span):
-#                 month_year = (current_month, current_year)
-#                 month_data = [review for review in reviews if datetime.strptime(review["created_at"].split("+")[0], "%Y-%m-%dT%H:%M:%S.%f")\
-#                               .month == current_month and datetime.strptime(review["created_at"].split("+")[0], "%Y-%m-%dT%H:%M:%S.%f")\
-#                               .year == current_year]
-#                 monthly_rating = sum(review.get("rating", 0) for review in month_data) / len(month_data) if month_data else 0
-#                 monthly_reviews_count = len(month_data)
-#                 monthly_data[f"{current_year}-{current_month}"] = {"monthly_rating": round(monthly_rating, 1), "monthly_reviews_count": monthly_reviews_count}
-#                 current_month -= 1
-#                 if current_month == 0:
-#                     current_month = 12
-#                     current_year -= 1
-
-#             return jsonify({"overall_rating": overall_rating, "reviews_count": reviews_count, "monthly_data": monthly_data}), 200
-#         else:
-#             return jsonify({"message": "No reviews available for this business.", "overall_rating": 0, "reviews_count": 0, "monthly_data": {}}), 200
-#     except KeyError:
-#         return jsonify({"message": "Key error occurred. Invalid data structure."}), 500
-#     except ZeroDivisionError:
-#         return jsonify({"message": "No reviews available for this business."}), 200
-#     except Exception as e:
-#         return jsonify({"message": str(e)}), 500
 
 
 @app.route('/overall_rating/<business_uid>/', defaults={'span': None}, methods=["GET"])
@@ -1271,6 +1105,9 @@ def business_categories():
     
     except Exception as e:
         return Response(response=json.dumps({"message": str(e)}), status=500, mimetype="application/json")
+    
+    
+    
 
 ######################################################
     # POSTGRESS REST APIS
