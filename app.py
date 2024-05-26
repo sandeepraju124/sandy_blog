@@ -1428,7 +1428,101 @@ def businessforlatlong():
 
 
 
-   
+# latlong api for house search
+@app.route('/pg/house/house-search-latlong', methods=['GET'])
+def house_search():
+    # Required parameters
+    latitude = request.args.get('latitude')
+    longitude = request.args.get('longitude')
+    distance = request.args.get('distance')
+
+    # Optional filtering parameters for the house table
+    house_facing = request.args.get('house_facing')
+    building_age = request.args.get('building_age')
+    house_type = request.args.get('house_type')
+    bedroom = request.args.get('bedroom')
+    car_parking = request.args.get('car_parking')
+    advance = request.args.get('advance')
+    price = request.args.get('price')
+
+    # Validate that latitude and longitude are provided and are floats
+    if not latitude or not longitude:
+        return jsonify({'error': 'Latitude and longitude parameters are required'}), 400
+    try:
+        latitude = float(latitude)
+        longitude = float(longitude)
+    except ValueError:
+        return jsonify({'error': 'Latitude and longitude must be valid numbers'}), 400
+
+    # Validate that distance is provided and is a positive number
+    if not distance:
+        return jsonify({'error': 'Distance parameter is required'}), 400
+    try:
+        distance = float(distance)
+        if distance <= 0:
+            return jsonify({'error': 'Distance must be a positive number'}), 400
+    except ValueError:
+        return jsonify({'error': 'Distance must be a valid number'}), 400
+
+    # Construct the SQL query
+    query = """
+    SELECT DISTINCT house.*, 
+                    business.business_uid, 
+                    business.business_name, 
+                    business.contact_information,
+                    business.country, 
+                    business.category, 
+                    business.sub_category, 
+                    business.longitude as business_longitude, 
+                    business.latitude as business_latitude
+    FROM house
+    JOIN business ON house.business_uid = business.business_uid
+    WHERE ST_DWithin(
+        ST_GeographyFromText('POINT(%s %s)'),
+        geography(ST_MakePoint(business.longitude, business.latitude)),
+        %s
+    )
+    """
+    parameters = [ longitude ,latitude , distance]
+
+    # Add optional filters dynamically
+    if house_facing:
+        query += " AND house.house_facing = %s"
+        parameters.append(house_facing)
+    if building_age:
+        query += " AND house.building_age = %s"
+        parameters.append(building_age)
+    if house_type:
+        query += " AND house.house_type = %s"
+        parameters.append(house_type)
+    if bedroom:
+        query += " AND house.bedroom = %s"
+        parameters.append(bedroom)
+    if car_parking:
+        query += " AND house.car_parking = %s"
+        parameters.append(car_parking)
+    if advance:
+        query += " AND house.advance <= %s"
+        parameters.append(advance)
+    if price:
+        query += " AND house.price <= %s"
+        parameters.append(price)
+
+    # Execute the query
+    try:
+        result = execute_query(query, parameters)
+    except Exception as e:
+        return jsonify({'error': f'Database error: {str(e)}'}), 500
+
+    # Check if any houses were found
+    if not result:
+        return jsonify({'message': 'No houses found within the specified distance'}), 200
+
+    # Return the results
+    return jsonify(result)
+
+
+
 
 
 
