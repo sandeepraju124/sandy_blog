@@ -1473,6 +1473,7 @@ def house_search():
                     business.country, 
                     business.category, 
                     business.sub_category, 
+                    business.profile_image_url,
                     business.longitude as business_longitude, 
                     business.latitude as business_latitude
     FROM house
