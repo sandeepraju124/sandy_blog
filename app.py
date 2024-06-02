@@ -1421,7 +1421,7 @@ def businessforlatlong():
 
     # Check if any businesses were found
     if not result:
-        return jsonify({'message': 'No businesses found within the specified distance'}), 200
+        return jsonify({'message': 'No businesses found within the specified distance'}), 404
 
     # Return the results
     return jsonify(result)
