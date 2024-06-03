@@ -354,6 +354,36 @@ def services():
         except Exception as e:
             return Response(response=json.dumps({"message": "Error occurred: " + str(e)}), status=500, mimetype="application/json")
 
+# this is only for posting operating hours
+
+@app.route('/mongo/business/hours', methods=["POST"])
+def operating_hours():
+    if request.method == 'POST':
+        try:
+            # Extract data from the request
+            data = request.json
+            business_uid = data.get('business_uid')
+            operating_hours = data.get('operating_hours')
+
+            if business_uid is None:
+                return Response(response=json.dumps({"message": "Missing business_uid in request"}), status=400, mimetype="application/json")
+
+            if operating_hours is None:
+                return Response(response=json.dumps({"message": "Missing operating_hours in request"}), status=400, mimetype="application/json")
+
+            # Check if the business exists
+            existing_business = services_collection.find_one({"business_uid": business_uid})
+
+            if existing_business:
+                # Update the document in the collection
+                services_collection.update_one({"business_uid": business_uid}, {"$set": {"operating_hours": operating_hours}})
+                return Response(response=json.dumps({"message": "Operating hours updated successfully"}), status=200, mimetype="application/json")
+            else:
+                # Create a new entry for the business
+                services_collection.insert_one({"business_uid": business_uid, "operating_hours": operating_hours})
+                return Response(response=json.dumps({"message": "New business added with operating hours"}), status=201, mimetype="application/json")
+        except Exception as e:
+            return Response(response=json.dumps({"message": "Error occurred: " + str(e)}), status=500, mimetype="application/json")
 
 
 
