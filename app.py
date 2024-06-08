@@ -866,7 +866,6 @@ def post_answer():
             timezone = pytz.timezone('Asia/Kolkata')
             current_time = datetime.now(timezone).isoformat()
 
-
             # Create a new answer document
             new_answer = {
                 "adetails": {
@@ -885,12 +884,13 @@ def post_answer():
                     # Update the document in the database
                     askcommunity.update_one({"_id": business_data["_id"]}, {"$set": business_data})
 
-                    return jsonify({"message": "Answer posted successfully"}), 200
+                    return jsonify({"message": "Answer posted successfully", "answerid": answer_id}), 200
 
         return jsonify({"error": "Question not found"}), 404
 
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+
     
 
 
