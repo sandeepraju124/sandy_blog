@@ -1243,9 +1243,13 @@ def get_business():
             data = request.form.to_dict()  # Convert ImmutableMultiDict to a mutable dictionary
             # print(data["business_uid"])
             business_uid = data["business_uid"]
-            file = request.files.get("profile_image_url")
-            file_url = upload_to_azure(file,business_uid)
-            data['profile_image_url'] = file_url
+            profile_image_url = request.files.get("profile_image_url")
+            
+            if profile_image_url:
+                file_url = upload_to_azure(profile_image_url, business_uid)
+                data['profile_image_url'] = file_url
+            # file_url = upload_to_azure(file,business_uid)
+            # data['profile_image_url'] = file_url
             keys = ', '.join(data.keys())
             values = ', '.join(['%s' for _ in range(len(data))])
             insert_query = f"INSERT INTO business ({keys}) VALUES ({values})"
