@@ -1278,6 +1278,30 @@ def get_business():
         except Exception as e:
             return jsonify({'error': str(e)}), 500
         
+@app.route('/pg/house', methods=['POST'])
+def house_data():
+
+    try:
+        data = request.form.to_dict()  # Convert ImmutableMultiDict to a mutable dictionary
+        # print(data["business_uid"])
+        business_uid = data["business_uid"]
+        # profile_image_url = request.files.get("profile_image_url")
+        
+        # if profile_image_url:
+        #     file_url = upload_to_azure(profile_image_url, business_uid)
+        #     data['profile_image_url'] = file_url
+        # file_url = upload_to_azure(file,business_uid)
+        # data['profile_image_url'] = file_url
+        keys = ', '.join(data.keys())
+        values = ', '.join(['%s' for _ in range(len(data))])
+        insert_query = f"INSERT INTO house ({keys}) VALUES ({values})"
+        execute_query(insert_query, tuple(data.values()))  # Execute the insert query
+
+        return jsonify({'message': 'House Data added successfully'})
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+        
 # ////////////////////////// testing above methpost method to upload image as well ////////////////
 
 # def upload_to_azure(file,business_uid):
