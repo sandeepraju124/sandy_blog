@@ -1245,7 +1245,7 @@ def get_business():
             business_uid = data["business_uid"]
             profile_image_url = request.files.get("profile_image_url")
             
-            if profile_image_url:
+            if profile_image_url: 
                 file_url = upload_to_azure(profile_image_url, business_uid)
                 data['profile_image_url'] = file_url
             # file_url = upload_to_azure(file,business_uid)
@@ -1278,29 +1278,59 @@ def get_business():
         except Exception as e:
             return jsonify({'error': str(e)}), 500
         
-@app.route('/pg/house', methods=['POST'])
+@app.route('/pg/house', methods=['GET','POST','PATCH'])
 def house_data():
+    if request.method == 'GET':
+        print("this is get method")
+        try:
+            base_query = "SELECT * FROM house WHERE"
+            filters = request.args
+            print(f"filters {filters.values()}")
+            where_clause = " AND ".join([f"{key} = %s" for key in filters.keys()]) # category = %s
+            print(f"where_clause {where_clause}")
+            full_query = f"{base_query} {where_clause};" if where_clause else f"{base_query} {full_query}"
+            result = execute_query(full_query, tuple(filters.values()))
+            return jsonify(result)
 
-    try:
-        data = request.form.to_dict()  # Convert ImmutableMultiDict to a mutable dictionary
-        # print(data["business_uid"])
-        business_uid = data["business_uid"]
-        # profile_image_url = request.files.get("profile_image_url")
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
         
-        # if profile_image_url:
-        #     file_url = upload_to_azure(profile_image_url, business_uid)
-        #     data['profile_image_url'] = file_url
-        # file_url = upload_to_azure(file,business_uid)
-        # data['profile_image_url'] = file_url
-        keys = ', '.join(data.keys())
-        values = ', '.join(['%s' for _ in range(len(data))])
-        insert_query = f"INSERT INTO house ({keys}) VALUES ({values})"
-        execute_query(insert_query, tuple(data.values()))  # Execute the insert query
+    elif request.method == 'POST':
+        try:
+            data = request.form.to_dict()  # Convert ImmutableMultiDict to a mutable dictionary
+            # print(data["business_uid"])
+            business_uid = data["business_uid"]
+            # profile_image_url = request.files.get("profile_image_url")
+            
+            # if profile_image_url:
+            #     file_url = upload_to_azure(profile_image_url, business_uid)
+            #     data['profile_image_url'] = file_url
+            # file_url = upload_to_azure(file,business_uid)
+            # data['profile_image_url'] = file_url
+            keys = ', '.join(data.keys())
+            values = ', '.join(['%s' for _ in range(len(data))])
+            insert_query = f"INSERT INTO house ({keys}) VALUES ({values})"
+            execute_query(insert_query, tuple(data.values()))  # Execute the insert query
 
-        return jsonify({'message': 'House Data added successfully'})
+            return jsonify({'message': 'House Data added successfully'})
+            
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
         
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    elif request.method == 'PATCH':
+        try:
+            data = request.json
+            business_uid = data['business_uid']
+            set_clause = ', '.join([f"{key} = %s" for key in data.keys()])
+            query = f"UPDATE house SET {set_clause} WHERE business_uid = %s"
+            params = tuple(data.values()) + (business_uid,)
+            result = execute_query(query, params)
+            if result is not None:
+                return jsonify({'message': 'House Data updated successfully'})
+            else:
+                return jsonify({'error': 'Failed to update House Data'}), 500
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
         
 # ////////////////////////// testing above methpost method to upload image as well ////////////////
 
