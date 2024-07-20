@@ -171,7 +171,7 @@ def rescommentname(resname):
 ##########      GET all user data        #################
 ####################################################################
 
-@app.route("/user",methods=["GET","POST"])
+@app.route("/user",methods=["GET","POST","PATCH"])
 def user():
     if request.method=='GET':
         # print("hitted get in user")
@@ -189,20 +189,39 @@ def user():
             userid = data["userid"]
             file = request.files.get("profile_image_url")
             blob_url = upload_to_azure(file,userid)
-            
-#         result = user_collection.insert_one({
-#     **request.form.to_dict(),  # Inserting all form data
-#     'dp': blob_url  # Inserting blob URL if it exists, else None
-# })
         user_data = {
             **request.form.to_dict(),
             'profile_image_url': blob_url  # Insert blob URL if it exists, else None
         }
-
-        # return dumps({'id': str(result.inserted_id)})
         result = user_collection.insert_one(user_data)
         return Response(response=json.dumps({"_id": str(result.inserted_id)}), status=201, mimetype="application/json")
-        # return Response(dumps({'id': str(result.inserted_id)}), headers=headers)
+    elif request.method == 'PATCH': 
+        print("in the patch")
+        try:
+            data = request.form.to_dict()
+            userid = data.get("userid")  # Retrieve userid from form data
+            
+            if not userid:
+                return Response(response=json.dumps({"error": "userid is required"}), status=400, mimetype="application/json")
+            
+            user = user_collection.find_one({"userid": userid})
+            if not user:
+                return Response(response=json.dumps({"error": "User not found"}), status=404, mimetype="application/json")
+
+            if "profile_image_url" in request.files:
+                file = request.files.get("profile_image_url")
+                blob_url = upload_to_azure(file, userid)
+                data['profile_image_url'] = blob_url
+
+            user_collection.update_one({"userid": userid}, {"$set": data})
+
+            updated_user = user_collection.find_one({"userid": userid})
+            updated_user["_id"] = str(updated_user["_id"])
+
+            return Response(response=json.dumps(updated_user), status=200, mimetype="application/json")
+        except Exception as e:
+            print("in to expect")
+            return Response(response=json.dumps({"error": str(e)}), status=500, mimetype="application/json")
 
 
 
