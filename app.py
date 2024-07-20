@@ -181,20 +181,27 @@ def user():
             users["_id"]= str(users["_id"])
         return Response(response = json.dumps(data),status = 200,mimetype="application/json")
     elif request.method=='POST':
-        blob_url = 0
+        print("hitted post in user")
+        blob_url = None
+        # blob_url = 0
         if "profile_image_url" in request.files:
             data = request.form.to_dict()  # Convert ImmutableMultiDict to a mutable dictionary
             userid = data["userid"]
             file = request.files.get("profile_image_url")
             blob_url = upload_to_azure(file,userid)
             
-        result = user_collection.insert_one({
-    **request.form.to_dict(),  # Inserting all form data
-    'dp': blob_url if blob_url else 0  # Inserting blob URL if it exists, else None
-})
+#         result = user_collection.insert_one({
+#     **request.form.to_dict(),  # Inserting all form data
+#     'dp': blob_url  # Inserting blob URL if it exists, else None
+# })
+        user_data = {
+            **request.form.to_dict(),
+            'profile_image_url': blob_url  # Insert blob URL if it exists, else None
+        }
 
-
-        return dumps({'id': str(result.inserted_id)})
+        # return dumps({'id': str(result.inserted_id)})
+        result = user_collection.insert_one(user_data)
+        return Response(response=json.dumps({"_id": str(result.inserted_id)}), status=201, mimetype="application/json")
         # return Response(dumps({'id': str(result.inserted_id)}), headers=headers)
 
 
