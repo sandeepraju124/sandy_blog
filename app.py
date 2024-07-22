@@ -1493,6 +1493,11 @@ def businessforlatlong():
     distance = request.args.get('distance')
     key = request.args.get('key')
     value = request.args.get('value')
+    print(latitude)
+    print(longitude)
+    print(distance)
+    print(key)
+    print(value)
 
     # Validate that latitude and longitude are provided and are floats
     if not latitude or not longitude:
@@ -1519,7 +1524,7 @@ def businessforlatlong():
     FROM business
     WHERE ST_DWithin(
         ST_GeographyFromText('POINT(%s %s)'),
-        geography(ST_MakePoint(business.longitude, business.latitude)),
+        geography(ST_MakePoint(business.latitude, business.longitude)),
         %s
     )
     """
