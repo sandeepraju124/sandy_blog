@@ -64,6 +64,19 @@ def home():
             return e
     return render_template('index.html')
 
+@app.route('/deleteaccount', methods=['GET'])
+def delete_account():
+    # if request.method == 'POST':
+    #     # content = request.get_json(force = True)
+    #     try:
+    #         data = request.form.get("email")
+    #         service_comments_collection.insert_one({"email": data})
+    #         return "inserted data"
+    #     except Exception as e:
+    #         # print(e)
+    #         return e
+    return render_template('delete_account.html')
+
 # terms and conditions screen
 
 @app.route('/termsandconditions', methods=['GET'])
