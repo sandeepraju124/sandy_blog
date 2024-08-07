@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download NearMe Apps</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            background-color: #f4f4f4;
+        }
+        header {
+            background-color: #4A90E2;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            overflow: hidden;
+            padding: 2rem 0;
+        }
+        .app-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+        .app-box {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin: 1rem;
+            width: 40%;
+            min-width: 300px;
+            text-align: center;
+        }
+        .app-icon {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 1rem;
+        }
+        .btn {
+            display: inline-block;
+            background: #4A90E2;
+            color: white;
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 1rem;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background: #4A90E2;
+        }
+        .feature-list {
+            text-align: left;
+            margin-top: 1rem;
+        }
+        footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Download NearMe Apps</h1>
+        <p>Get started with our user and business applications</p>
+    </header>
+
+    <div class="container">
+        <div class="app-container">
+            <div class="app-box">
+                <img src="user-app-icon.png" alt="User App Icon" class="app-icon">
+                <h2>NearMe User App</h2>
+                <p>Discover and connect with local businesses</p>
+                <div class="feature-list">
+                    <h3>Key Features:</h3>
+                    <ul>
+                        <li>Find nearby businesses</li>
+                        <li>Read and write reviews</li>
+                        <li>Get personalized recommendations</li>
+                        <li>Save favorite places</li>
+                    </ul>
+                </div>
+                <a href="#" class="btn" id="user-app-download">Download User App</a>
+            </div>
+
+            <div class="app-box">
+                <img src="business-app-icon.png" alt="Business App Icon" class="app-icon">
+                <h2>NearMe Business App</h2>
+                <p>Manage your business profile and connect with customers</p>
+                <div class="feature-list">
+                    <h3>Key Features:</h3>
+                    <ul>
+                        <li>Update business information</li>
+                        <li>Respond to customer reviews</li>
+                        <li>Post special offers and events</li>
+                        <li>Analytics and insights</li>
+                    </ul>
+                </div>
+                <a href="#" class="btn" id="business-app-download">Download Business App</a>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 NearMe. All rights reserved.</p>
+    </footer>
+
+    <script>
+        document.getElementById('user-app-download').addEventListener('click', function(e) {
+            e.preventDefault();
+            window.location.href = 'https://play.google.com/store/apps/details?id=com.NearMe.user';
+        });
+
+        document.getElementById('business-app-download').addEventListener('click', function(e) {
+            e.preventDefault();
+            window.location.href = 'https://play.google.com/store/apps/details?id=com.NearMe.business';
+        });
+    </script>
+</body>
+</html>

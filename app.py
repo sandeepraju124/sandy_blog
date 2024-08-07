@@ -82,6 +82,21 @@ def ourservices():
     return render_template('ourservices.html')
 
 
+@app.route('/landing', methods=['GET'])
+def landing():
+    return render_template('landingnew.html')
+
+
+
+@app.route('/features')
+def features():
+    return render_template('test.html')
+
+@app.route('/download')
+def download():
+    return render_template('download.html')
+
+
 
 ##########      GET  all the users        #################
 
@@ -611,46 +626,119 @@ def postcomment():
     
 
     
+# @app.route("/editcomment", methods=["PUT"])
+# def edit_comment():
+#     try:
+#         business_uid = request.form['business_uid']
+#         review_id = request.form['review_id']
+#         user_id = request.form['user_id']  # Assuming the user_id is sent in the request
+#         new_rating = int(request.form['rating'])
+#         new_review = request.form['review']
+        
+#         # Fetch the specific review to check if the user_id matches
+#         review = service_comments_collection.find_one(
+#             {"business_uid": business_uid, "reviews.review_id": review_id},
+#             {"reviews.$":  1}
+#         )
+
+#         # Set the timezone to 'Asia/Kolkata' for Indian Standard Time
+#         timezone = pytz.timezone('Asia/Kolkata')
+#         current_time = datetime.now(timezone).isoformat()
+
+#         # If the review exists and the user_id matches, proceed with the update
+#         if review and review.get('reviews', [{}])[0].get('user_id') == user_id:
+#             # Update the specific review in the business document using the $ positional operator
+#             result = service_comments_collection.update_one(
+#                 {"business_uid": business_uid, "reviews.review_id": review_id},
+#                 {"$set": {
+#                     "reviews.$.rating": new_rating,  
+#                     "reviews.$.comment": new_review,  # Use the new combined review string
+#                     "reviews.$.updated_at": current_time  # Add the current timestamp
+#                 }}
+#             )
+            
+#             if result.matched_count ==  0:
+#                 return jsonify({"error": "Business or review not found"}),  404
+            
+#             return jsonify({"message": "Review updated successfully"}),  200
+#         else:
+#             return jsonify({"error": "Unauthorized or review not found"}),  403
+
+#     except Exception as e:
+#         return jsonify({"error": str(e)}),  500
+
 @app.route("/editcomment", methods=["PUT"])
 def edit_comment():
     try:
+        print(f"Raw form data: {request.form}")
         business_uid = request.form['business_uid']
         review_id = request.form['review_id']
-        user_id = request.form['user_id']  # Assuming the user_id is sent in the request
-        new_rating = int(request.form['rating'])
+        user_id = request.form['user_id']
+        new_rating = request.form['rating']
         new_review = request.form['review']
-        
-        # Fetch the specific review to check if the user_id matches
-        review = service_comments_collection.find_one(
-            {"business_uid": business_uid, "reviews.review_id": review_id},
-            {"reviews.$":  1}
+        print(f"Attempting to edit review. Business UID: {business_uid}, Review ID: {review_id}, User ID: {user_id}")
+        # Fetch the entire review document
+        full_review_doc = service_comments_collection.find_one(
+            {"business_uid": business_uid, "reviews.review_id": review_id}
         )
+        print(f"Full review document: {full_review_doc}")
+        if not full_review_doc:
+            print("No document found for this business and review ID combination")
+            return jsonify({"error": "Review not found"}), 404
+        # Extract the specific review
+        matching_reviews = [rev for rev in full_review_doc.get('reviews', []) if rev.get('review_id') == review_id]
 
-        # Set the timezone to 'Asia/Kolkata' for Indian Standard Time
-        timezone = pytz.timezone('Asia/Kolkata')
-        current_time = datetime.now(timezone).isoformat()
+        if not matching_reviews:
+            print("No matching review found in the document")
+            return jsonify({"error": "Review not found"}), 404
+        stored_review = matching_reviews[0]
+        print(f"Stored review: {stored_review}")
+        stored_user_id = stored_review.get('user_id')
+        print(f"Stored user ID: {stored_user_id}, type: {type(stored_user_id)}")
+        print(f"Received user ID: {user_id}, type: {type(user_id)}")
+        if stored_user_id is None:
+            print("No user ID associated with this review")
+            return jsonify({
+                "error": "No user ID associated with this review",
+                "details": {
+                    "stored_user_id": str(stored_user_id),
+                    "received_user_id": str(user_id)
+                }
+            }), 400
 
-        # If the review exists and the user_id matches, proceed with the update
-        if review and review.get('reviews', [{}])[0].get('user_id') == user_id:
-            # Update the specific review in the business document using the $ positional operator
+        # Convert both IDs to string, strip whitespace, and compare case-insensitively
+        elif str(stored_user_id).strip().lower() == str(user_id).strip().lower():
+            # Set the timezone to 'Asia/Kolkata' for Indian Standard Time
+            timezone = pytz.timezone('Asia/Kolkata')
+            current_time = datetime.now(timezone).isoformat()
             result = service_comments_collection.update_one(
                 {"business_uid": business_uid, "reviews.review_id": review_id},
                 {"$set": {
-                    "reviews.$.rating": new_rating,  
-                    "reviews.$.comment": new_review,  # Use the new combined review string
-                    "reviews.$.updated_at": current_time  # Add the current timestamp
+                    "reviews.$.rating": int(new_rating),
+                    "reviews.$.comment": new_review,
+                    "reviews.$.updated_at": current_time
                 }}
             )
-            
-            if result.matched_count ==  0:
-                return jsonify({"error": "Business or review not found"}),  404
-            
-            return jsonify({"message": "Review updated successfully"}),  200
+            if result.modified_count == 0:
+                print("No document was modified")
+                return jsonify({"error": "Review not found or could not be edited"}), 404
+            print("Review edited successfully")
+            return jsonify({"message": "Review edited successfully"}), 200
         else:
-            return jsonify({"error": "Unauthorized or review not found"}),  403
-
+            print(f"User ID mismatch. Stored: {stored_user_id}, Received: {user_id}")
+            return jsonify({
+                "error": "Unauthorized",
+                "details": {
+                    "stored_user_id": str(stored_user_id),
+                    "received_user_id": str(user_id)
+                }
+            }), 403
+    except KeyError as ke:
+        print(f"Missing key in form data: {str(ke)}")
+        return jsonify({"error": f"Missing required field: {str(ke)}"}), 400
     except Exception as e:
-        return jsonify({"error": str(e)}),  500
+        print(f"An error occurred: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 ####################### Delete Comment Endpoint  ###########################
 
@@ -658,36 +746,46 @@ def edit_comment():
 @app.route("/deletecomment", methods=["DELETE"])
 def delete_comment():
     try:
-        business_uid = request.form['business_uid']
-        review_id = request.form['review_id']
-        user_id = request.form['user_id']  # Assuming the user_id is sent in the request
+        business_uid = request.form.get('business_uid')
+        review_id = request.form.get('review_id')
+        user_id = request.form.get('user_id')
 
-        # Fetch the specific review to check if the user_id matches
+        if not all([business_uid, review_id, user_id]):
+            return jsonify({"error": "Missing required fields"}), 400
+
+        # Use projection to fetch only the necessary fields
         review = service_comments_collection.find_one(
-            {"business_uid": business_uid, "reviews.review_id": review_id},
+            {
+                "business_uid": business_uid,
+                "reviews": {
+                    "$elemMatch": {
+                        "review_id": review_id,
+                        "user_id": user_id
+                    }
+                }
+            },
             {"reviews.$": 1}
         )
 
-        # If the review exists and the user_id matches, proceed with the deletion
-        if review and review.get('reviews', [{}])[0].get('user_id') == user_id:
-            # Delete the specific review from the business document
-            result = service_comments_collection.update_one(
-                {"business_uid": business_uid},
-                {"$pull": {"reviews": {"review_id": review_id}}}
-            )
+        if not review:
+            return jsonify({"error": "Review not found or unauthorized"}), 404
 
-            if result.modified_count == 0:
-                return jsonify({"error": "Review not found or could not be deleted"}), 404
+        # Perform the update
+        result = service_comments_collection.update_one(
+            {"business_uid": business_uid},
+            {"$pull": {"reviews": {"review_id": review_id, "user_id": user_id}}}
+        )
 
-            return jsonify({"message": "Review deleted successfully"}), 200
-        else:
-            return jsonify({"error": "Unauthorized or review not found"}), 403
+        if result.modified_count == 0:
+            return jsonify({"error": "Review not found or could not be deleted"}), 404
+
+        return jsonify({"message": "Review deleted successfully"}), 200
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        app.logger.error(f"An error occurred: {str(e)}")
+        return jsonify({"error": "An internal error occurred"}), 500
     
 
-    
 
 
 ########################################################
