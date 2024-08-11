@@ -97,7 +97,8 @@
             </div>
 
             <div class="app-box">
-                <img src="business-app-icon.png" alt="Business App Icon" class="app-icon">
+                <!-- <img src="business-app-icon.png" alt="Business App Icon" class="app-icon"> -->
+                <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Business App Icon" class="app-icon">
                 <h2>NearMe Business App</h2>
                 <p>Manage your business profile and connect with customers</p>
                 <div class="feature-list">
@@ -126,7 +127,7 @@
 
         document.getElementById('business-app-download').addEventListener('click', function(e) {
             e.preventDefault();
-            window.location.href = 'https://play.google.com/store/apps/details?id=com.NearMe.business';
+            window.location.href = 'https://play.google.com/store/apps/details?id=com.sandeep.nearRme';
         });
     </script>
 </body>

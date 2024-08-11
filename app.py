@@ -51,18 +51,22 @@ container_client = blob_service_client.get_container_client(container_name)
 # find with object id
 # data = list(service_comments_collection.find({"_id": ObjectId(id)}))
 
-@app.route('/', methods=['GET', 'POST'])
-def home():
-    if request.method == 'POST':
-        # content = request.get_json(force = True)
-        try:
-            data = request.form.get("email")
-            service_comments_collection.insert_one({"email": data})
-            return "inserted data"
-        except Exception as e:
-            # print(e)
-            return e
-    return render_template('index.html')
+# @app.route('/', methods=['GET', 'POST'])
+# def home():
+#     if request.method == 'POST':
+#         # content = request.get_json(force = True)
+#         try:
+#             data = request.form.get("email")
+#             service_comments_collection.insert_one({"email": data})
+#             return "inserted data"
+#         except Exception as e:
+#             # print(e)
+#             return e
+    # return render_template('index.html')
+
+@app.route('/', methods=['GET'])
+def landing():
+    return render_template('landingnew.html')
 
 @app.route('/deleteaccount', methods=['GET'])
 def delete_account():
@@ -95,9 +99,7 @@ def ourservices():
     return render_template('ourservices.html')
 
 
-@app.route('/landing', methods=['GET'])
-def landing():
-    return render_template('landingnew.html')
+
 
 
 
