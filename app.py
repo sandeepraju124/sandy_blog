@@ -13,6 +13,7 @@ import pytz
 import psycopg2
 from azure.core.exceptions import ResourceNotFoundError
 from collections import defaultdict
+import requests
 
 
 
@@ -1679,60 +1680,6 @@ def businessforlatlong():
     # Return the results
     return jsonify(result)
 
-# @app.route('/pg/comments/latlong', methods=['GET'])
-# def commentsforlatlong():
-#     # Check if required parameters are provided
-#     latitude = request.args.get('latitude')
-#     longitude = request.args.get('longitude')
-#     distance = request.args.get('distance')
-    
-#     print(latitude)
-#     print(longitude)
-#     print(distance)
-    
-#     # Validate that latitude and longitude are provided and are floats
-#     if not latitude or not longitude:
-#         return jsonify({'error': 'Latitude and longitude parameters are required'}), 400
-#     try:
-#         latitude = float(latitude)
-#         longitude = float(longitude)
-#     except ValueError:
-#         return jsonify({'error': 'Latitude and longitude must be valid numbers'}), 400
-    
-#     # Validate that distance is provided and is a positive number
-#     if not distance:
-#         return jsonify({'error': 'Distance parameter is required'}), 400
-#     try:
-#         distance = float(distance)
-#         if distance <= 0:
-#             return jsonify({'error': 'Distance must be a positive number'}), 400
-#     except ValueError:
-#         return jsonify({'error': 'Distance must be a valid number'}), 400
-    
-#     # Construct the SQL query
-#     query = """
-#     SELECT *
-#     FROM comments
-#     WHERE ST_DWithin(
-#         ST_GeographyFromText('POINT(%s %s)'),
-#         geography(ST_MakePoint(comments.lat, comments.long)),
-#         %s
-#     )
-#     """
-    
-#     # Execute the query
-#     try:
-#         result = execute_query(query, (latitude,longitude, distance))
-#     except Exception as e:
-#         return jsonify({'error': f'Database error: {str(e)}'}), 500
-    
-#     # Check if any comments were found
-#     if not result:
-#         return jsonify({'message': 'No comments found within the specified distance'}), 404
-    
-#     # Return the results
-#     return jsonify(result)
-
 
 @app.route('/pg/comments/latlong', methods=['GET'])
 def commentsforlatlong():
@@ -1785,7 +1732,26 @@ def commentsforlatlong():
     if not result:
         return jsonify({'message': 'No comments found within the specified distance'}), 404
 
-    return jsonify(result)
+    # Include user details for each comment
+    comments_with_user_details = []
+    for comment in result:
+        user_id = comment['user_id']
+        
+        # Fetch user details from MongoDB
+        user_data = user_collection.find_one({"userid": user_id})
+        
+        if user_data:
+            user_data["_id"] = str(user_data["_id"])  # Convert ObjectId to string
+            comment['user_name'] = user_data.get('name', 'Unknown')
+            comment['profile_image_url'] = user_data.get('profile_image_url', None)
+        else:
+            comment['user_name'] = 'Unknown'
+            comment['profile_image_url'] = None
+        
+        comments_with_user_details.append(comment)
+
+    return jsonify(comments_with_user_details)
+
 
 
 
