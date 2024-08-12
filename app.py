@@ -577,7 +577,7 @@ def comments_uid(uid):
 
 
 @app.route("/postcomment", methods=["POST"])
-def postcomment():
+def oldpostcomment():
     try:
         rating = int(request.form['rating'])
         user_id = request.form['user_id']
@@ -637,53 +637,11 @@ def postcomment():
     except Exception as e:
         return str(e),  500
     
- ################### Edit comment Endpoint ##################
+ ################## Edit comment Endpoint ##################
     
-
-    
-# @app.route("/editcomment", methods=["PUT"])
-# def edit_comment():
-#     try:
-#         business_uid = request.form['business_uid']
-#         review_id = request.form['review_id']
-#         user_id = request.form['user_id']  # Assuming the user_id is sent in the request
-#         new_rating = int(request.form['rating'])
-#         new_review = request.form['review']
-        
-#         # Fetch the specific review to check if the user_id matches
-#         review = service_comments_collection.find_one(
-#             {"business_uid": business_uid, "reviews.review_id": review_id},
-#             {"reviews.$":  1}
-#         )
-
-#         # Set the timezone to 'Asia/Kolkata' for Indian Standard Time
-#         timezone = pytz.timezone('Asia/Kolkata')
-#         current_time = datetime.now(timezone).isoformat()
-
-#         # If the review exists and the user_id matches, proceed with the update
-#         if review and review.get('reviews', [{}])[0].get('user_id') == user_id:
-#             # Update the specific review in the business document using the $ positional operator
-#             result = service_comments_collection.update_one(
-#                 {"business_uid": business_uid, "reviews.review_id": review_id},
-#                 {"$set": {
-#                     "reviews.$.rating": new_rating,  
-#                     "reviews.$.comment": new_review,  # Use the new combined review string
-#                     "reviews.$.updated_at": current_time  # Add the current timestamp
-#                 }}
-#             )
-            
-#             if result.matched_count ==  0:
-#                 return jsonify({"error": "Business or review not found"}),  404
-            
-#             return jsonify({"message": "Review updated successfully"}),  200
-#         else:
-#             return jsonify({"error": "Unauthorized or review not found"}),  403
-
-#     except Exception as e:
-#         return jsonify({"error": str(e)}),  500
 
 @app.route("/editcomment", methods=["PUT"])
-def edit_comment():
+def oldedit_comment():
     try:
         print(f"Raw form data: {request.form}")
         business_uid = request.form['business_uid']
@@ -759,7 +717,7 @@ def edit_comment():
 
 
 @app.route("/deletecomment", methods=["DELETE"])
-def delete_comment():
+def olddelete_comment():
     try:
         business_uid = request.form.get('business_uid')
         review_id = request.form.get('review_id')
@@ -1319,6 +1277,7 @@ def execute_query(query, params=None):
         raise e
 
 
+
 def upload_to_azure(file,business_uid):
     connection_string = "DefaultEndpointsProtocol=https;AccountName=chambersafe;AccountKey=LU8ZPmbxH6yALstQxEDxCaoPfS3VEWut06bqEOdwxRiukEm7sgQOkLPflx++XGEwOuSnYlvwo1G5+ASt8lszfA==;EndpointSuffix=core.windows.net"
     container_name = "slytherinsafestorage"
@@ -1346,10 +1305,8 @@ def delete_from_azure(blob_url):
         print(f"An error occurred: {str(e)}")
         return False
         
-    
 # import pdb; pdb.set_trace()
 # delete_from_azure("https://chambersafe.blob.core.windows.net/slytherinsafestorage/-uuid1271c3ac462-a433-4108-8a74-b04239d0a0f3.jpg")
- 
 # @app.route('/upload', methods=['POST'])
 def upload_file():
     uploaded_files = request.files.getlist("files")
@@ -1527,6 +1484,70 @@ def get_category():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+
+# # Endpoint to retrieve filter data by passing params for comments
+
+@app.route('/comments/where', methods=['GET', 'POST', 'DELETE', 'PATCH'])
+def manage_comments():
+    try:
+        if request.method == 'GET':
+            base_query = "SELECT * FROM comments WHERE"
+            filters = request.args
+            where_clause = " AND ".join([f"{key} = %s" for key in filters.keys()])
+            full_query = f"{base_query} {where_clause};" if where_clause else f"{base_query}"
+            result = execute_query(full_query, tuple(filters.values()))
+            return jsonify(result)
+
+        elif request.method == 'POST':
+            data = request.form.to_dict()
+            business_uid = data.get("business_id")
+            keys = ', '.join(data.keys())
+            values = ', '.join(['%s' for _ in range(len(data))])
+            insert_query = f"INSERT INTO comments ({keys}) VALUES ({values})"
+            execute_query(insert_query, tuple(data.values()))
+            return jsonify({'message': 'Comments data added successfully'})
+
+        elif request.method == 'DELETE':
+            comment_id = request.args.get('comment_id')
+            if not comment_id:
+                return jsonify({'error': 'Comment ID is required'}), 400
+
+            delete_query = "DELETE FROM comments WHERE comment_id = %s"
+            affected_rows = execute_query(delete_query, (comment_id,))
+            
+            if affected_rows == 0:
+                return jsonify({'error': 'Comment not found'}), 404
+            
+            return jsonify({'message': 'Comment deleted successfully'})
+
+        elif request.method == 'PATCH':
+            data = request.form.to_dict()
+            comment_id = data.pop('comment_id', None)
+            
+            if not comment_id:
+                return jsonify({'error': 'Comment ID is required'}), 400
+
+            if not data:
+                return jsonify({'error': 'No fields to update'}), 400
+
+            update_fields = ', '.join([f"{key} = %s" for key in data.keys()])
+            update_query = f"UPDATE comments SET {update_fields} WHERE comment_id = %s"
+            values = tuple(data.values()) + (comment_id,)
+            affected_rows = execute_query(update_query, values)
+            
+            if affected_rows == 0:
+                return jsonify({'error': 'Comment not found'}), 404
+            
+            return jsonify({'message': 'Comment updated successfully'})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+
+    
+
+            
 
 
 @app.route('/pg/business/house-data', methods=['GET'])
@@ -1658,6 +1679,59 @@ def businessforlatlong():
     # Return the results
     return jsonify(result)
 
+@app.route('/pg/comments/latlong', methods=['GET'])
+def commentsforlatlong():
+    # Check if required parameters are provided
+    latitude = request.args.get('latitude')
+    longitude = request.args.get('longitude')
+    distance = request.args.get('distance')
+    
+    print(latitude)
+    print(longitude)
+    print(distance)
+    
+    # Validate that latitude and longitude are provided and are floats
+    if not latitude or not longitude:
+        return jsonify({'error': 'Latitude and longitude parameters are required'}), 400
+    try:
+        latitude = float(latitude)
+        longitude = float(longitude)
+    except ValueError:
+        return jsonify({'error': 'Latitude and longitude must be valid numbers'}), 400
+    
+    # Validate that distance is provided and is a positive number
+    if not distance:
+        return jsonify({'error': 'Distance parameter is required'}), 400
+    try:
+        distance = float(distance)
+        if distance <= 0:
+            return jsonify({'error': 'Distance must be a positive number'}), 400
+    except ValueError:
+        return jsonify({'error': 'Distance must be a valid number'}), 400
+    
+    # Construct the SQL query
+    query = """
+    SELECT *
+    FROM comments
+    WHERE ST_DWithin(
+        ST_GeographyFromText('POINT(%s %s)'),
+        geography(ST_MakePoint(comments.lat, comments.long)),
+        %s
+    )
+    """
+    
+    # Execute the query
+    try:
+        result = execute_query(query, (latitude,longitude, distance))
+    except Exception as e:
+        return jsonify({'error': f'Database error: {str(e)}'}), 500
+    
+    # Check if any comments were found
+    if not result:
+        return jsonify({'message': 'No comments found within the specified distance'}), 404
+    
+    # Return the results
+    return jsonify(result)
 
 
 # latlong api for house search
