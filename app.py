@@ -1679,16 +1679,69 @@ def businessforlatlong():
     # Return the results
     return jsonify(result)
 
+# @app.route('/pg/comments/latlong', methods=['GET'])
+# def commentsforlatlong():
+#     # Check if required parameters are provided
+#     latitude = request.args.get('latitude')
+#     longitude = request.args.get('longitude')
+#     distance = request.args.get('distance')
+    
+#     print(latitude)
+#     print(longitude)
+#     print(distance)
+    
+#     # Validate that latitude and longitude are provided and are floats
+#     if not latitude or not longitude:
+#         return jsonify({'error': 'Latitude and longitude parameters are required'}), 400
+#     try:
+#         latitude = float(latitude)
+#         longitude = float(longitude)
+#     except ValueError:
+#         return jsonify({'error': 'Latitude and longitude must be valid numbers'}), 400
+    
+#     # Validate that distance is provided and is a positive number
+#     if not distance:
+#         return jsonify({'error': 'Distance parameter is required'}), 400
+#     try:
+#         distance = float(distance)
+#         if distance <= 0:
+#             return jsonify({'error': 'Distance must be a positive number'}), 400
+#     except ValueError:
+#         return jsonify({'error': 'Distance must be a valid number'}), 400
+    
+#     # Construct the SQL query
+#     query = """
+#     SELECT *
+#     FROM comments
+#     WHERE ST_DWithin(
+#         ST_GeographyFromText('POINT(%s %s)'),
+#         geography(ST_MakePoint(comments.lat, comments.long)),
+#         %s
+#     )
+#     """
+    
+#     # Execute the query
+#     try:
+#         result = execute_query(query, (latitude,longitude, distance))
+#     except Exception as e:
+#         return jsonify({'error': f'Database error: {str(e)}'}), 500
+    
+#     # Check if any comments were found
+#     if not result:
+#         return jsonify({'message': 'No comments found within the specified distance'}), 404
+    
+#     # Return the results
+#     return jsonify(result)
+
+
 @app.route('/pg/comments/latlong', methods=['GET'])
 def commentsforlatlong():
     # Check if required parameters are provided
     latitude = request.args.get('latitude')
     longitude = request.args.get('longitude')
     distance = request.args.get('distance')
-    
-    print(latitude)
-    print(longitude)
-    print(distance)
+    limit = request.args.get('limit', default=10, type=int)
+    offset = request.args.get('offset', default=0, type=int)
     
     # Validate that latitude and longitude are provided and are floats
     if not latitude or not longitude:
@@ -1709,7 +1762,7 @@ def commentsforlatlong():
     except ValueError:
         return jsonify({'error': 'Distance must be a valid number'}), 400
     
-    # Construct the SQL query
+    # Construct the SQL query with limit and offset for pagination
     query = """
     SELECT *
     FROM comments
@@ -1718,20 +1771,22 @@ def commentsforlatlong():
         geography(ST_MakePoint(comments.lat, comments.long)),
         %s
     )
+    ORDER BY created_at DESC
+    LIMIT %s OFFSET %s
     """
     
     # Execute the query
     try:
-        result = execute_query(query, (latitude,longitude, distance))
+        result = execute_query(query, (latitude, longitude, distance, limit, offset))
     except Exception as e:
         return jsonify({'error': f'Database error: {str(e)}'}), 500
     
     # Check if any comments were found
     if not result:
         return jsonify({'message': 'No comments found within the specified distance'}), 404
-    
-    # Return the results
+
     return jsonify(result)
+
 
 
 # latlong api for house search
