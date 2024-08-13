@@ -1498,7 +1498,25 @@ def manage_comments():
             where_clause = " AND ".join([f"{key} = %s" for key in filters.keys()])
             full_query = f"{base_query} {where_clause};" if where_clause else f"{base_query}"
             result = execute_query(full_query, tuple(filters.values()))
-            return jsonify(result)
+            comments_with_user_details = []
+            for comment in result:
+                user_id = comment['user_id']
+                
+                # Fetch user details from MongoDB
+                user_data = user_collection.find_one({"userid": user_id})
+                
+                if user_data:
+                    user_data["_id"] = str(user_data["_id"])  # Convert ObjectId to string
+                    comment['user_name'] = user_data.get('name', 'Unknown')
+                    comment['profile_image_url'] = user_data.get('profile_image_url', None)
+                else:
+                    comment['user_name'] = 'Unknown'
+                    comment['profile_image_url'] = None
+                
+                comments_with_user_details.append(comment)
+            
+            # return jsonify(result)
+            return jsonify(comments_with_user_details)
 
         elif request.method == 'POST':
             data = request.form.to_dict()
