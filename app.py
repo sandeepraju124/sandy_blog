@@ -1653,59 +1653,159 @@ def manage_comments():
 #     except:
 #         return jsonify({'error': str(e)}), 500
 
-@app.route('/favourite/where', methods=['GET'])
+@app.route('/favourite/where', methods=['GET', 'POST', 'DELETE'])
 def manage_favourite():
     try:
-        base_query = "SELECT * FROM favourite"
-        filters = request.args
-        where_clause = " AND ".join([f"{key} = %s" for key in filters.keys()])
-        full_query = f"{base_query} WHERE {where_clause};" if where_clause else base_query
-        favourites = execute_query(full_query, tuple(filters.values()))
+        if request.method == 'GET':
+            base_query = "SELECT * FROM favourite"
+            filters = request.args
+            where_clause = " AND ".join([f"{key} = %s" for key in filters.keys()])
+            full_query = f"{base_query} WHERE {where_clause};" if where_clause else base_query
+            favourites = execute_query(full_query, tuple(filters.values()))
 
-        # Extract user_ids and business_ids from favourites
-        user_ids = {favourite['user_id'] for favourite in favourites}
-        business_ids = {favourite['business_id'] for favourite in favourites}
+            # Extract user_ids and business_ids from favourites
+            user_ids = {favourite['user_id'] for favourite in favourites}
+            business_ids = {favourite['business_id'] for favourite in favourites}
 
-        # Fetch all user details in one go from MongoDB
-        user_data = {user['userid']: user for user in user_collection.find({"userid": {"$in": list(user_ids)}})}
+            # Fetch all user details in one go from MongoDB
+            user_data = {user['userid']: user for user in user_collection.find({"userid": {"$in": list(user_ids)}})}
 
-        # Fetch all business details (including profile_image_url) in one go from PostgreSQL
-        business_query = "SELECT business_uid, business_name, profile_image_url, sub_category FROM business WHERE business_uid = ANY(%s)"
-        business_data = execute_query(business_query, (list(business_ids),))
-        business_dict = {
-            business['business_uid']: {
-                'business_name': business['business_name'],
-                'profile_image_url': business['profile_image_url'],
-                'sub_category': business['sub_category']
-            } for business in business_data
-        }
+            # Fetch all business details (including profile_image_url) in one go from PostgreSQL
+            business_query = "SELECT business_uid, business_name, profile_image_url, sub_category FROM business WHERE business_uid = ANY(%s)"
+            business_data = execute_query(business_query, (list(business_ids),))
+            business_dict = {
+                business['business_uid']: {
+                    'business_name': business['business_name'],
+                    'profile_image_url': business['profile_image_url'],
+                    'sub_category': business['sub_category']
+                } for business in business_data
+            }
 
-        favourites_with_details = []
-        for favourite in favourites:
-            user_id = favourite['user_id']
-            business_id = favourite['business_id']
+            favourites_with_details = []
+            for favourite in favourites:
+                user_id = favourite['user_id']
+                business_id = favourite['business_id']
 
-            # Get user details
-            user_info = user_data.get(user_id)
-            if user_info:
-                favourite['user_name'] = user_info.get('name', 'Unknown')
-                # If you want to include the user's profile_image_url from MongoDB, uncomment the line below
-                # favourite['user_profile_image_url'] = user_info.get('profile_image_url', None)
-            else:
-                favourite['user_name'] = 'Unknown'
-                # favourite['user_profile_image_url'] = None
+                # Get user details
+                user_info = user_data.get(user_id)
+                if user_info:
+                    favourite['user_name'] = user_info.get('name', 'Unknown')
+                    # If you want to include the user's profile_image_url from MongoDB, uncomment the line below
+                    # favourite['user_profile_image_url'] = user_info.get('profile_image_url', None)
+                else:
+                    favourite['user_name'] = 'Unknown'
+                    # favourite['user_profile_image_url'] = None
 
-            # Get business details including profile_image_url
-            business_info = business_dict.get(business_id, {})
-            favourite['business_name'] = business_info.get('business_name', 'Unknown')
-            favourite['business_profile_image_url'] = business_info.get('profile_image_url', None)
-            favourite['sub_category'] = business_info.get('sub_category', None)
+                # Get business details including profile_image_url
+                business_info = business_dict.get(business_id, {})
+                favourite['business_name'] = business_info.get('business_name', 'Unknown')
+                favourite['business_profile_image_url'] = business_info.get('profile_image_url', None)
+                favourite['sub_category'] = business_info.get('sub_category', None)
 
-            favourites_with_details.append(favourite)
+                favourites_with_details.append(favourite)
 
-        return jsonify(favourites_with_details)
+            return jsonify(favourites_with_details)
+        elif request.method == 'POST':
+            data = request.form.to_dict()
+            user_id = data.get('user_id')
+            business_id = data.get('business_id')
+            print(user_id)
+            print(business_id)
+
+            if not user_id or not business_id:
+                return jsonify({'error': 'user_id and business_id are required'}), 400
+
+            # Check if the favorite already exists
+            check_query = "SELECT * FROM favourite WHERE user_id = %s AND business_id = %s"
+            existing_favourite = execute_query(check_query, (user_id, business_id))
+
+            if existing_favourite:
+                return jsonify({'error': 'This business is already in the user\'s favorites'}), 400
+
+            # Insert the new favorite
+            insert_query = "INSERT INTO favourite (user_id, business_id) VALUES (%s, %s)"
+            execute_query(insert_query, (user_id, business_id))
+
+            return jsonify({'message': 'Business added to favorites successfully'}), 201
+        
+        elif request.method == 'DELETE':
+            favourite_id = request.args.get('favourite_id')
+
+            if not favourite_id:
+                return jsonify({'error': 'favourite_id is required'}), 400
+
+            # Check if the favorite exists
+            check_query = "SELECT * FROM favourite WHERE favourite_id = %s"
+            existing_favourite = execute_query(check_query, (favourite_id,))
+
+            if not existing_favourite:
+                return jsonify({'error': 'This favourite_id is not in the user\'s favorites'}), 404
+
+            # Delete the favorite
+            delete_query = "DELETE FROM favourite WHERE favourite_id = %s"
+            execute_query(delete_query, (favourite_id,))
+            return jsonify({'message': 'favourite_id removed from favorites successfully'}), 200
+
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+# @app.route('/favourite/post', methods=['POST'])
+# def add_favourite():
+#     try:
+#         print("yes im here")
+#         data = request.form.to_dict()
+#         # business_uid = data.get("business_id")
+#         # data = request.get_json()
+#         user_id = data.get('user_id')
+#         business_id = data.get('business_id')
+#         print(user_id)
+#         print(business_id)
+
+#         if not user_id or not business_id:
+#             return jsonify({'error': 'user_id and business_id are required'}), 400
+
+#         # Check if the favorite already exists
+#         check_query = "SELECT * FROM favourite WHERE user_id = %s AND business_id = %s"
+#         existing_favourite = execute_query(check_query, (user_id, business_id))
+
+#         if existing_favourite:
+#             return jsonify({'error': 'This business is already in the user\'s favorites'}), 400
+
+#         # Insert the new favorite
+#         insert_query = "INSERT INTO favourite (user_id, business_id) VALUES (%s, %s)"
+#         execute_query(insert_query, (user_id, business_id))
+
+#         return jsonify({'message': 'Business added to favorites successfully'}), 201
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
+    
+# @app.route('/favourite/delete', methods=['DELETE'])
+# def delete_favourite():
+#     try:
+#         # data = request.form.to_dict()
+#         favourite_id = request.args.get('favourite_id')
+#         # user_id = data.get('user_id')
+#         # business_id = data.get('business_id')
+
+#         if not favourite_id:
+#             return jsonify({'error': 'favourite_id is required'}), 400
+
+#         # Check if the favorite exists
+#         check_query = "SELECT * FROM favourite WHERE favourite_id = %s"
+#         existing_favourite = execute_query(check_query, (favourite_id))
+
+#         if not existing_favourite:
+#             return jsonify({'error': 'This favourite_id is not in the user\'s favorites'}), 404
+
+#         # Delete the favorite
+#         delete_query = "DELETE FROM favourite WHERE favourite_id = %s"
+#         execute_query(delete_query, (favourite_id))
+
+#         return jsonify({'message': 'favourite_id removed from favorites successfully'}), 200
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
+
 
 
 
