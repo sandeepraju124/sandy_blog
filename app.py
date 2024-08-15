@@ -1609,10 +1609,10 @@ def manage_comments():
         return jsonify({'error': str(e)}), 500
     
 
-# @app.route('/comments/where/test', methods=['GET'])
-# def manage_comments_test():
+# @app.route('/favourite/where', methods=['GET'])
+# def manage_favourite():
 #     try:
-#         base_query = "SELECT * FROM comments"
+#         base_query = "SELECT * FROM favourite"
 #         filters = request.args
 #         where_clause = " AND ".join([f"{key} = %s" for key in filters.keys()])
 #         full_query = f"{base_query} WHERE {where_clause};" if where_clause else base_query
@@ -1639,10 +1639,10 @@ def manage_comments():
 #             user_info = user_data.get(user_id)
 #             if user_info:
 #                 comment['user_name'] = user_info.get('name', 'Unknown')
-#                 comment['profile_image_url'] = user_info.get('profile_image_url', None)
+#                 # comment['profile_image_url'] = user_info.get('profile_image_url', None)
 #             else:
 #                 comment['user_name'] = 'Unknown'
-#                 comment['profile_image_url'] = None
+#                 # comment['profile_image_url'] = None
 
 #             # Get business details
 #             comment['business_name'] = business_dict.get(business_id, 'Unknown')
@@ -1653,6 +1653,57 @@ def manage_comments():
 #     except:
 #         return jsonify({'error': str(e)}), 500
 
+@app.route('/favourite/where', methods=['GET'])
+def manage_favourite():
+    try:
+        base_query = "SELECT * FROM favourite"
+        filters = request.args
+        where_clause = " AND ".join([f"{key} = %s" for key in filters.keys()])
+        full_query = f"{base_query} WHERE {where_clause};" if where_clause else base_query
+        favourites = execute_query(full_query, tuple(filters.values()))
+
+        # Extract user_ids and business_ids from favourites
+        user_ids = {favourite['user_id'] for favourite in favourites}
+        business_ids = {favourite['business_id'] for favourite in favourites}
+
+        # Fetch all user details in one go from MongoDB
+        user_data = {user['userid']: user for user in user_collection.find({"userid": {"$in": list(user_ids)}})}
+
+        # Fetch all business details (including profile_image_url) in one go from PostgreSQL
+        business_query = "SELECT business_uid, business_name, profile_image_url FROM business WHERE business_uid = ANY(%s)"
+        business_data = execute_query(business_query, (list(business_ids),))
+        business_dict = {
+            business['business_uid']: {
+                'business_name': business['business_name'],
+                'profile_image_url': business['profile_image_url']
+            } for business in business_data
+        }
+
+        favourites_with_details = []
+        for favourite in favourites:
+            user_id = favourite['user_id']
+            business_id = favourite['business_id']
+
+            # Get user details
+            user_info = user_data.get(user_id)
+            if user_info:
+                favourite['user_name'] = user_info.get('name', 'Unknown')
+                # If you want to include the user's profile_image_url from MongoDB, uncomment the line below
+                # favourite['user_profile_image_url'] = user_info.get('profile_image_url', None)
+            else:
+                favourite['user_name'] = 'Unknown'
+                # favourite['user_profile_image_url'] = None
+
+            # Get business details including profile_image_url
+            business_info = business_dict.get(business_id, {})
+            favourite['business_name'] = business_info.get('business_name', 'Unknown')
+            favourite['business_profile_image_url'] = business_info.get('profile_image_url', None)
+
+            favourites_with_details.append(favourite)
+
+        return jsonify(favourites_with_details)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 
