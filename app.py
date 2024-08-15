@@ -1501,18 +1501,25 @@ def manage_comments():
             comments_with_user_details = []
             for comment in result:
                 user_id = comment['user_id']
+                business_id = comment['business_id']
                 
                 # Fetch user details from MongoDB
                 user_data = user_collection.find_one({"userid": user_id})
+                # Fetch Business details from pg business
+                business_query = "SELECT business_name FROM business WHERE business_uid = %s"
+                business_data = execute_query(business_query, (business_id,))
+                business_name = business_data[0]['business_name'] if business_data else 'Unknown'
                 
                 if user_data:
                     user_data["_id"] = str(user_data["_id"])  # Convert ObjectId to string
                     comment['user_name'] = user_data.get('name', 'Unknown')
                     comment['profile_image_url'] = user_data.get('profile_image_url', None)
+                    
                 else:
                     comment['user_name'] = 'Unknown'
                     comment['profile_image_url'] = None
-                
+                    
+                comment['business_name'] = business_name
                 comments_with_user_details.append(comment)
             
             # return jsonify(result)
