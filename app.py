@@ -1504,7 +1504,7 @@ def manage_comments():
             business_ids = {comment['business_id'] for comment in comments}
 
             # Fetch all user details in one go from MongoDB
-            user_data = {str(user['_id']): user for user in user_collection.find({"userid": {"$in": list(user_ids)}})}
+            user_data = {user['userid']: user for user in user_collection.find({"userid": {"$in": list(user_ids)}})}
 
             # Fetch all business details in one go from PostgreSQL
             business_query = "SELECT business_uid, business_name FROM business WHERE business_uid = ANY(%s)"
@@ -1609,7 +1609,6 @@ def manage_comments():
         return jsonify({'error': str(e)}), 500
     
 
-            
 # @app.route('/comments/where/test', methods=['GET'])
 # def manage_comments_test():
 #     try:
@@ -1624,7 +1623,7 @@ def manage_comments():
 #         business_ids = {comment['business_id'] for comment in comments}
 
 #         # Fetch all user details in one go from MongoDB
-#         user_data = {str(user['_id']): user for user in user_collection.find({"userid": {"$in": list(user_ids)}})}
+#         user_data = {user['userid']: user for user in user_collection.find({"userid": {"$in": list(user_ids)}})}
 
 #         # Fetch all business details in one go from PostgreSQL
 #         business_query = "SELECT business_uid, business_name FROM business WHERE business_uid = ANY(%s)"
@@ -1651,9 +1650,9 @@ def manage_comments():
 #             comments_with_user_details.append(comment)
 
 #         return jsonify(comments_with_user_details)
-    
-#     except Exception as e:
+#     except:
 #         return jsonify({'error': str(e)}), 500
+
 
 
 
