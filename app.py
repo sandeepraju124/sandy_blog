@@ -1670,12 +1670,13 @@ def manage_favourite():
         user_data = {user['userid']: user for user in user_collection.find({"userid": {"$in": list(user_ids)}})}
 
         # Fetch all business details (including profile_image_url) in one go from PostgreSQL
-        business_query = "SELECT business_uid, business_name, profile_image_url FROM business WHERE business_uid = ANY(%s)"
+        business_query = "SELECT business_uid, business_name, profile_image_url, sub_category FROM business WHERE business_uid = ANY(%s)"
         business_data = execute_query(business_query, (list(business_ids),))
         business_dict = {
             business['business_uid']: {
                 'business_name': business['business_name'],
-                'profile_image_url': business['profile_image_url']
+                'profile_image_url': business['profile_image_url'],
+                'sub_category': business['sub_category']
             } for business in business_data
         }
 
@@ -1698,6 +1699,7 @@ def manage_favourite():
             business_info = business_dict.get(business_id, {})
             favourite['business_name'] = business_info.get('business_name', 'Unknown')
             favourite['business_profile_image_url'] = business_info.get('profile_image_url', None)
+            favourite['sub_category'] = business_info.get('sub_category', None)
 
             favourites_with_details.append(favourite)
 
