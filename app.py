@@ -1493,37 +1493,75 @@ def get_category():
 def manage_comments():
     try:
         if request.method == 'GET':
-            base_query = "SELECT * FROM comments WHERE"
+            base_query = "SELECT * FROM comments"
             filters = request.args
             where_clause = " AND ".join([f"{key} = %s" for key in filters.keys()])
-            full_query = f"{base_query} {where_clause};" if where_clause else f"{base_query}"
-            result = execute_query(full_query, tuple(filters.values()))
+            full_query = f"{base_query} WHERE {where_clause};" if where_clause else base_query
+            comments = execute_query(full_query, tuple(filters.values()))
+
+            # Extract user_ids and business_ids from comments
+            user_ids = {comment['user_id'] for comment in comments}
+            business_ids = {comment['business_id'] for comment in comments}
+
+            # Fetch all user details in one go from MongoDB
+            user_data = {str(user['_id']): user for user in user_collection.find({"userid": {"$in": list(user_ids)}})}
+
+            # Fetch all business details in one go from PostgreSQL
+            business_query = "SELECT business_uid, business_name FROM business WHERE business_uid = ANY(%s)"
+            business_data = execute_query(business_query, (list(business_ids),))
+            business_dict = {business['business_uid']: business['business_name'] for business in business_data}
+
             comments_with_user_details = []
-            for comment in result:
+            for comment in comments:
                 user_id = comment['user_id']
                 business_id = comment['business_id']
-                
-                # Fetch user details from MongoDB
-                user_data = user_collection.find_one({"userid": user_id})
-                # Fetch Business details from pg business
-                business_query = "SELECT business_name FROM business WHERE business_uid = %s"
-                business_data = execute_query(business_query, (business_id,))
-                business_name = business_data[0]['business_name'] if business_data else 'Unknown'
-                
-                if user_data:
-                    user_data["_id"] = str(user_data["_id"])  # Convert ObjectId to string
-                    comment['user_name'] = user_data.get('name', 'Unknown')
-                    comment['profile_image_url'] = user_data.get('profile_image_url', None)
-                    
+
+                # Get user details
+                user_info = user_data.get(user_id)
+                if user_info:
+                    comment['user_name'] = user_info.get('name', 'Unknown')
+                    comment['profile_image_url'] = user_info.get('profile_image_url', None)
                 else:
                     comment['user_name'] = 'Unknown'
                     comment['profile_image_url'] = None
-                    
-                comment['business_name'] = business_name
+
+                # Get business details
+                comment['business_name'] = business_dict.get(business_id, 'Unknown')
+
                 comments_with_user_details.append(comment)
-            
-            # return jsonify(result)
+
             return jsonify(comments_with_user_details)
+            # base_query = "SELECT * FROM comments WHERE"
+            # filters = request.args
+            # where_clause = " AND ".join([f"{key} = %s" for key in filters.keys()])
+            # full_query = f"{base_query} {where_clause};" if where_clause else f"{base_query}"
+            # result = execute_query(full_query, tuple(filters.values()))
+            # comments_with_user_details = []
+            # for comment in result:
+            #     user_id = comment['user_id']
+            #     business_id = comment['business_id']
+                
+            #     # Fetch user details from MongoDB
+            #     user_data = user_collection.find_one({"userid": user_id})
+            #     # Fetch Business details from pg business
+            #     business_query = "SELECT business_name FROM business WHERE business_uid = %s"
+            #     business_data = execute_query(business_query, (business_id,))
+            #     business_name = business_data[0]['business_name'] if business_data else 'Unknown'
+                
+            #     if user_data:
+            #         user_data["_id"] = str(user_data["_id"])  # Convert ObjectId to string
+            #         comment['user_name'] = user_data.get('name', 'Unknown')
+            #         comment['profile_image_url'] = user_data.get('profile_image_url', None)
+                    
+            #     else:
+            #         comment['user_name'] = 'Unknown'
+            #         comment['profile_image_url'] = None
+
+            #     comment['business_name'] = business_name
+            #     comments_with_user_details.append(comment)
+            
+            # # return jsonify(result)
+            # return jsonify(comments_with_user_details)
 
         elif request.method == 'POST':
             data = request.form.to_dict()
@@ -1571,9 +1609,52 @@ def manage_comments():
         return jsonify({'error': str(e)}), 500
     
 
-    
-
             
+# @app.route('/comments/where/test', methods=['GET'])
+# def manage_comments_test():
+#     try:
+#         base_query = "SELECT * FROM comments"
+#         filters = request.args
+#         where_clause = " AND ".join([f"{key} = %s" for key in filters.keys()])
+#         full_query = f"{base_query} WHERE {where_clause};" if where_clause else base_query
+#         comments = execute_query(full_query, tuple(filters.values()))
+
+#         # Extract user_ids and business_ids from comments
+#         user_ids = {comment['user_id'] for comment in comments}
+#         business_ids = {comment['business_id'] for comment in comments}
+
+#         # Fetch all user details in one go from MongoDB
+#         user_data = {str(user['_id']): user for user in user_collection.find({"userid": {"$in": list(user_ids)}})}
+
+#         # Fetch all business details in one go from PostgreSQL
+#         business_query = "SELECT business_uid, business_name FROM business WHERE business_uid = ANY(%s)"
+#         business_data = execute_query(business_query, (list(business_ids),))
+#         business_dict = {business['business_uid']: business['business_name'] for business in business_data}
+
+#         comments_with_user_details = []
+#         for comment in comments:
+#             user_id = comment['user_id']
+#             business_id = comment['business_id']
+
+#             # Get user details
+#             user_info = user_data.get(user_id)
+#             if user_info:
+#                 comment['user_name'] = user_info.get('name', 'Unknown')
+#                 comment['profile_image_url'] = user_info.get('profile_image_url', None)
+#             else:
+#                 comment['user_name'] = 'Unknown'
+#                 comment['profile_image_url'] = None
+
+#             # Get business details
+#             comment['business_name'] = business_dict.get(business_id, 'Unknown')
+
+#             comments_with_user_details.append(comment)
+
+#         return jsonify(comments_with_user_details)
+    
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
+
 
 
 @app.route('/pg/business/house-data', methods=['GET'])
