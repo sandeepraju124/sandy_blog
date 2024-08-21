@@ -1974,6 +1974,67 @@ def get_house_data():
 
 # this is the new api for the above one, 
 
+# @app.route('/pg/business/latlong', methods=['GET'])
+# def businessforlatlong():
+#     # Check if required parameters are provided
+#     latitude = request.args.get('latitude')
+#     longitude = request.args.get('longitude')
+#     distance = request.args.get('distance')
+#     key = request.args.get('key')
+#     value = request.args.get('value')
+
+#     # Validate that latitude and longitude are provided and are floats
+#     if not latitude or not longitude:
+#         return jsonify({'error': 'Latitude and longitude parameters are required'}), 400
+#     try:
+#         latitude = float(latitude)
+#         longitude = float(longitude)
+#     except ValueError:
+#         return jsonify({'error': 'Latitude and longitude must be valid numbers'}), 400
+
+#     # Validate that distance is provided and is a positive number
+#     if not distance:
+#         return jsonify({'error': 'Distance parameter is required'}), 400
+#     try:
+#         distance = float(distance)
+#         if distance <= 0:
+#             return jsonify({'error': 'Distance must be a positive number'}), 400
+#     except ValueError:
+#         return jsonify({'error': 'Distance must be a valid number'}), 400
+
+#     # Construct the SQL query
+#     query = """
+#     SELECT b.*, 
+#            COALESCE(AVG(c.rating), 0) AS avg_rating, 
+#            COALESCE(COUNT(c.rating), 0) AS total_reviews
+#     FROM business b
+#     LEFT JOIN comments c ON b.business_uid = c.business_id
+#     WHERE ST_DWithin(
+#         ST_GeographyFromText('POINT(%s %s)'),
+#         geography(ST_MakePoint(b.latitude, b.longitude)),
+#         %s
+#     )
+#     """
+
+#     if key and value:
+#         query += f"AND b.{key} = %s"
+
+#     query += " GROUP BY b.business_uid"
+
+#     # Execute the query
+#     try:
+#         result = execute_query(query, (latitude, longitude, distance, value) if key and value else (latitude, longitude, distance))
+#     except Exception as e:
+#         return jsonify({'error': f'Database error: {str(e)}'}), 500
+
+#     # Check if any businesses were found
+#     if not result:
+#         return jsonify({'message': 'No businesses found within the specified distance'}), 404
+
+#     # Return the results
+#     return jsonify(result)
+
+
 @app.route('/pg/business/latlong', methods=['GET'])
 def businessforlatlong():
     # Check if required parameters are provided
@@ -1982,6 +2043,8 @@ def businessforlatlong():
     distance = request.args.get('distance')
     key = request.args.get('key')
     value = request.args.get('value')
+    length = request.args.get('length')
+    sortby = request.args.get('sortby')
 
     # Validate that latitude and longitude are provided and are floats
     if not latitude or not longitude:
@@ -2017,13 +2080,28 @@ def businessforlatlong():
     """
 
     if key and value:
-        query += f"AND b.{key} = %s"
+        query += f"AND b.{key} = %s "
 
-    query += " GROUP BY b.business_uid"
+    query += "GROUP BY b.business_uid"
+
+    # Apply dynamic sorting
+    if sortby in ['avg_rating', 'total_reviews', 'date_column']:
+        query += f" ORDER BY {sortby} DESC"
+
+    # Append limit clause if length is specified
+    if length:
+        try:
+            length = int(length)
+            query += " LIMIT %s"
+            params = (latitude, longitude, distance, value, length) if key and value else (latitude, longitude, distance, length)
+        except ValueError:
+            return jsonify({'error': 'Length must be a valid integer'}), 400
+    else:
+        params = (latitude, longitude, distance, value) if key and value else (latitude, longitude, distance)
 
     # Execute the query
     try:
-        result = execute_query(query, (latitude, longitude, distance, value) if key and value else (latitude, longitude, distance))
+        result = execute_query(query, params)
     except Exception as e:
         return jsonify({'error': f'Database error: {str(e)}'}), 500
 
@@ -2033,6 +2111,7 @@ def businessforlatlong():
 
     # Return the results
     return jsonify(result)
+
 
 
 @app.route('/pg/comments/latlong', methods=['GET'])
