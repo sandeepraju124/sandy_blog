@@ -1244,11 +1244,11 @@ def business_categories():
 def execute_query(query, params=None):
     print("called execute_query")
     db_config = {
-        'host': 'database-1.cf8i022mk2yx.us-east-1.rds.amazonaws.com',
+        'host': 'database-1-instance-1.c7iqok4sw8cg.ap-south-1.rds.amazonaws.com',
         'port': '5432',
         'database': 'postgres',
         'user': 'postgres',
-        'password': 'ZhLU2T5NdIhq5J6Rzrr9'
+        'password': 'Nearme1137'
     }
     try:
         print("try")
