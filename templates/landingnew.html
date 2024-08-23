@@ -6,10 +6,10 @@
     <title>NearMe - Discover Local Businesses</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        /* CSS styles */
         :root {
             --primary-color: #00A699;
-            --secondary-color: #F5A623;
+            /* --secondary-color: #F5A623; */
+            --secondary-color: #808080;
             --text-color: #333;
             --bg-color: #F8F9FA;
         }
@@ -24,23 +24,31 @@
         }
         
         header {
-            background-color: var(--primary-color);
+            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://content.gallup.com/origin/gallupinc/GallupSpaces/Production/Cms/WORKPLACEV9CMS/szngsfqqjkih5cqdjdk-ja.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
             color: white;
             text-align: center;
-            padding: 2rem 0;
+            padding: 10rem 0;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
         header h1 {
             margin: 0;
-            font-size: 2.5rem;
+            font-size: 4rem;
             font-weight: 600;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
-        
+
         header p {
-            margin: 0.5rem 0 0;
-            font-size: 1.1rem;
+            margin: 1.5rem 0 0;
+            font-size: 1.5rem;
             font-weight: 300;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
         }
         
         nav {
@@ -127,6 +135,31 @@
             margin: 0 0.5rem;
         }
         
+        .cta-button {
+            display: inline-block;
+            background: var(--secondary-color);
+            color: white;
+            padding: 1rem 2rem;
+            text-decoration: none;
+            border-radius: 30px;
+            margin-top: 2rem;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            font-weight: 600;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+        }
+        
+        .cta-button:hover {
+            background: var(--primary-color);
+            transform: translateY(-2px);
+        }
+        
+        #services {
+            text-align: center;
+            background-color: var(--bg-color);
+            padding: 4rem 0;
+        }
+        
         footer {
             background-color: var(--text-color);
             color: white;
@@ -154,37 +187,47 @@
 <body>
     <header>
         <h1>NearMe</h1>
-        <p>Discover and Connect with Local Businesses</p>
+        <p>Uncover the best of your city with our Yelp-like app, designed to connect you with top-rated local businesses.</p>
     </header>
 
     <nav>
         <ul>
-            <!-- <li><a href="#about">About</a></li> -->
-            <li><a href="/features">Features</a></li>
-            <li><a href="/download">Download</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#services">Services</a></li>
+            <li><a href="#download">Download</a></li>
         </ul>
     </nav>
 
     <div class="container">
         <section id="about">
             <h2>About Our Platform</h2>
-            <p>NearMe is a revolutionary platform connecting users with local businesses. Our mission is to empower both consumers and businesses by providing a seamless, user-friendly experience for discovering, reviewing, and engaging with local establishments.</p>
+            <p>NearMe is a revolutionary platform connecting users with local businesses. Whether you're searching for a cozy café, a popular restaurant, or a trusted service provider, our app makes it easy to explore, review, and share your experiences. Our mission is to empower both consumers and businesses by providing a seamless, user-friendly experience for discovering, reviewing, and engaging with local establishments.</p>
         </section>
 
         <section id="features">
             <h2>Key Features</h2>
             <ul>
-                <li>Personalized local business recommendations</li>
-                <li>Authentic reviews from verified users</li>
+                <li>Discover Local Gems: Explore a wide range of businesses, including restaurants, shops, and services near you.</li>
+                <li>Read and Write Reviews: Share your thoughts and read real reviews from other users to make informed decisions.</li>
+                <li>Personalized Recommendations: Get tailored suggestions based on your preferences and location.</li>
+                <li>Favorite Businesses: Save your favorite places for quick access and updates.</li>
+                <li>Business Profiles: View detailed information about businesses, including contact details, hours, and more.</li>
                 <li>Direct messaging with business owners</li>
                 <li>Exclusive in-app deals and offers</li>
                 <li>Intuitive interface for users and business owners</li>
             </ul>
         </section>
 
+        <section id="services">
+            <h2>Explore Our Services</h2>
+            <p>Discover a wide range of local businesses and services in your area, all from your smartphone.</p>
+            <a href="#" class="cta-button">View All Listed Services</a>
+        </section>
+
         <section id="download">
             <h2>Get Started Now</h2>
-            <p>Experience NearMe on your mobile device. Download our apps today!</p>
+            <p>Experience NearMe on your smartphone. Whether you're looking to try something new or find the best spots in town, our mobile app is your go-to guide for discovering and enjoying local businesses. Download now and start exploring!</p>
             <a href="#" class="btn" id="user-app">Download User App</a>
             <a href="#" class="btn" id="business-app">Download Business App</a>
         </section>
@@ -198,13 +241,25 @@
         // JavaScript to handle app download links
         document.getElementById('user-app').addEventListener('click', function(e) {
             e.preventDefault();
-            window.location.href = 'https://play.google.com/store/apps/details?id=com.nearme.user';
+            window.location.href = 'https://play.google.com/store/apps/details?id=com.front.nearme';
         });
 
         document.getElementById('business-app').addEventListener('click', function(e) {
             e.preventDefault();
-            window.location.href = 'https://play.google.com/store/apps/details?id=com.nearme.business';
+            window.location.href = 'https://play.google.com/store/apps/details?id=com.sandeep.nearRme';
         });
+
+        // New event listener for the "View All Listed Services" button
+        // document.querySelector('.cta-button').addEventListener('click', function(e) {
+        //     e.preventDefault();
+        //     alert('This would typically link to a page listing all services. For now, it\'s just a placeholder.');
+        // });
+
+
+        document.querySelector('.cta-button').addEventListener('click', function(e) {
+        e.preventDefault();
+        window.location.href = '/services'; // Redirect to the /features route
+    });
     </script>
 </body>
 </html>

@@ -94,19 +94,12 @@ def contact():
     
     return render_template('contact.html')
 
-@app.route('/ourservices', methods=['GET'])
-def ourservices():
-    
-    return render_template('ourservices.html')
 
 
 
-
-
-
-@app.route('/features')
+@app.route('/services')
 def features():
-    return render_template('test.html')
+    return render_template('services.html')
 
 @app.route('/download')
 def download():
