@@ -1479,6 +1479,41 @@ def house_data():
 #     except Exception as e:
 #         return jsonify({'error': str(e)}), 500
     
+# @app.route('/pg/business/where', methods=['GET'])
+# def get_category():
+#     try:
+#         # Base query to select business details along with average rating and total reviews
+#         base_query = """
+#         SELECT b.*, 
+#                COALESCE(AVG(c.rating), 0) AS avg_rating, 
+#                COALESCE(COUNT(c.rating), 0) AS total_reviews
+#         FROM business b
+#         LEFT JOIN comments c ON b.business_uid = c.business_id
+#         WHERE
+#         """
+
+#         # Get filters from query parameters
+#         filters = request.args
+#         # print(f"filters {filters.values()}")  # ImmutableMultiDict([('category', 'food')])
+
+#         # Create WHERE clause based on the filters provided
+#         where_clause = " AND ".join([f"b.{key} = %s" for key in filters.keys()])
+#         # print(f"where_clause {where_clause}")
+
+#         # Complete the full query
+#         full_query = f"{base_query} {where_clause} GROUP BY b.business_uid;" if where_clause else f"{base_query[:-6]} GROUP BY b.business_uid;"
+
+#         # Execute the query with the filters as parameters
+#         result = execute_query(full_query, tuple(filters.values()))
+
+#         return jsonify(result)
+
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
+
+
+# http://127.0.0.1:5000/pg/business/where?is_premium=True&category=Food&length=3&sortby=avg_rating
+
 @app.route('/pg/business/where', methods=['GET'])
 def get_category():
     try:
@@ -1493,23 +1528,40 @@ def get_category():
         """
 
         # Get filters from query parameters
-        filters = request.args
-        # print(f"filters {filters.values()}")  # ImmutableMultiDict([('category', 'food')])
+        filters = request.args.to_dict()
 
         # Create WHERE clause based on the filters provided
-        where_clause = " AND ".join([f"b.{key} = %s" for key in filters.keys()])
-        # print(f"where_clause {where_clause}")
+        where_clause = " AND ".join([f"b.{key} = %s" for key in filters.keys() if key not in ['length', 'sortby']])
 
         # Complete the full query
-        full_query = f"{base_query} {where_clause} GROUP BY b.business_uid;" if where_clause else f"{base_query[:-6]} GROUP BY b.business_uid;"
+        full_query = f"{base_query} {where_clause} GROUP BY b.business_uid" if where_clause else f"{base_query[:-6]} GROUP BY b.business_uid"
+
+        # Apply dynamic sorting
+        sortby = filters.get('sortby')
+        if sortby in ['avg_rating', 'total_reviews', 'date_column']:
+            full_query += f" ORDER BY {sortby} DESC"
+
+        # Initialize params with filter values
+        params = tuple(filters[key] for key in filters.keys() if key not in ['length', 'sortby'])
+
+        # Append limit clause if length is specified
+        length = filters.get('length')
+        if length:
+            try:
+                length = int(length)
+                full_query += " LIMIT %s"
+                params += (length,)
+            except ValueError:
+                return jsonify({'error': 'Length must be a valid integer'}), 400
 
         # Execute the query with the filters as parameters
-        result = execute_query(full_query, tuple(filters.values()))
+        result = execute_query(full_query, params)
 
         return jsonify(result)
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
     
 
