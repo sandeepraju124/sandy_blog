@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NearMe Features - Discover Local Services</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #00A699;
+            --secondary-color: #00A699;
+            --text-color: #484848;
+            --bg-color: #F7F7F7;
+            --card-bg: #FFFFFF;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+        }
+        
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 600;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 4rem 2rem;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .feature-card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            color: var(--secondary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .feature-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-description {
+            font-size: 1rem;
+            color: #666;
+        }
+        
+        .cta-section {
+            text-align: center;
+            margin-top: 4rem;
+            padding: 3rem;
+            background-color: var(--secondary-color);
+            border-radius: 8px;
+            color: white;
+        }
+        
+        .cta-title {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .cta-description {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background-color: white;
+            color: var(--secondary-color);
+            padding: 0.75rem 1.5rem;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+        
+        .cta-button:hover {
+            background-color: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 2rem 1rem;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>NearMe Services</h1>
+    </header>
+
+    <div class="container">
+        <div class="features-grid">
+            <div class="feature-card">
+                <i class="fas fa-utensils feature-icon"></i>
+                <h2 class="feature-title">Restaurants</h2>
+                <p class="feature-description">Discover local eateries, read reviews, and make reservations effortlessly.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-shopping-bag feature-icon"></i>
+                <h2 class="feature-title">Shopping</h2>
+                <p class="feature-description">Find the best local shops, boutiques, and markets in your area.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-spa feature-icon"></i>
+                <h2 class="feature-title">Beauty & Spa</h2>
+                <p class="feature-description">Locate and book appointments at top-rated salons and spas near you.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-dumbbell feature-icon"></i>
+                <h2 class="feature-title">Fitness</h2>
+                <p class="feature-description">Explore gyms, yoga studios, and fitness centers in your neighborhood.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-car feature-icon"></i>
+                <h2 class="feature-title">Auto Services</h2>
+                <p class="feature-description">Find reliable mechanics, car washes, and auto repair shops nearby.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-home feature-icon"></i>
+                <h2 class="feature-title">Home Services</h2>
+                <p class="feature-description">Connect with trusted plumbers, electricians, and home repair professionals.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-medkit feature-icon"></i>
+                <h2 class="feature-title">Healthcare</h2>
+                <p class="feature-description">Find doctors, dentists, and medical facilities in your local area.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-graduation-cap feature-icon"></i>
+                <h2 class="feature-title">Education</h2>
+                <p class="feature-description">Discover schools, tutoring services, and educational resources nearby.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-paint-brush feature-icon"></i>
+                <h2 class="feature-title">Arts & Culture</h2>
+                <p class="feature-description">Explore local museums, galleries, and cultural events in your city.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-paw feature-icon"></i>
+                <h2 class="feature-title">Pet Services</h2>
+                <p class="feature-description">Find pet stores, veterinarians, and pet-friendly establishments nearby.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-cocktail feature-icon"></i>
+                <h2 class="feature-title">Nightlife</h2>
+                <p class="feature-description">Discover bars, clubs, and entertainment venues for exciting nights out.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-laptop feature-icon"></i>
+                <h2 class="feature-title">Tech Support</h2>
+                <p class="feature-description">Find local IT services, computer repair shops, and tech support.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-tshirt feature-icon"></i>
+                <h2 class="feature-title">Laundry & Dry Cleaning</h2>
+                <p class="feature-description">Locate nearby laundromats and professional dry cleaning services.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-bicycle feature-icon"></i>
+                <h2 class="feature-title">Outdoor Activities</h2>
+                <p class="feature-description">Discover parks, trails, and outdoor recreation spots in your area.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-camera feature-icon"></i>
+                <h2 class="feature-title">Photography</h2>
+                <p class="feature-description">Find local photographers, photo studios, and printing services.</p>
+            </div>
+
+            <div class="feature-card">
+                <i class="fas fa-balance-scale feature-icon"></i>
+                <h2 class="feature-title">Legal Services</h2>
+                <p class="feature-description">Find local attorneys, law firms, and legal consultation services.</p>
+            </div>
+
+            <div class="feature-card">
+                <i class="fas fa-piggy-bank feature-icon"></i>
+                <h2 class="feature-title">Financial Services</h2>
+                <p class="feature-description">Locate banks, financial advisors, and accounting services nearby.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-home feature-icon"></i>
+                <h2 class="feature-title">Real Estate</h2>
+                <p class="feature-description">Connect with local realtors, property managers, and view listings.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-plane feature-icon"></i>
+                <h2 class="feature-title">Travel & Tourism</h2>
+                <p class="feature-description">Discover local attractions, tour guides, and travel agencies.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-car feature-icon"></i>
+                <h2 class="feature-title">Automotive Sales</h2>
+                <p class="feature-description">Find car dealerships, used car lots, and automotive showrooms.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-child feature-icon"></i>
+                <h2 class="feature-title">Childcare Services</h2>
+                <p class="feature-description">Locate daycare centers, babysitters, and child education facilities.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-user-nurse feature-icon"></i>
+                <h2 class="feature-title">Senior Care</h2>
+                <p class="feature-description">Find assisted living facilities, home care services, and senior centers.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-ring feature-icon"></i>
+                <h2 class="feature-title">Wedding Planning</h2>
+                <p class="feature-description">Discover wedding planners, venues, and related services in your area.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-glass-cheers feature-icon"></i>
+                <h2 class="feature-title">Event Venues</h2>
+                <p class="feature-description">Find spaces for conferences, parties, and special occasions.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-truck feature-icon"></i>
+                <h2 class="feature-title">Moving & Storage</h2>
+                <p class="feature-description">Locate moving companies, storage facilities, and packing services.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-hammer feature-icon"></i>
+                <h2 class="feature-title">Home Improvement</h2>
+                <p class="feature-description">Find contractors, interior designers, and home renovation experts.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-guitar feature-icon"></i>
+                <h2 class="feature-title">Music & Instruments</h2>
+                <p class="feature-description">Discover music stores, instrument repair shops, and music lessons.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-volleyball-ball feature-icon"></i>
+                <h2 class="feature-title">Sports & Recreation</h2>
+                <p class="feature-description">Find sports facilities, equipment rentals, and recreational activities.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-leaf feature-icon"></i>
+                <h2 class="feature-title">Gardening & Landscaping</h2>
+                <p class="feature-description">Locate gardening centers, landscapers, and lawn care services.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-book feature-icon"></i>
+                <h2 class="feature-title">Tutoring & Education</h2>
+                <p class="feature-description">Find tutors, learning centers, and educational resources nearby.</p>
+            </div>
+
+        </div>
+
+        <!-- <div class="cta-section">
+            <h2 class="cta-title">Ready to Explore?</h2>
+            <p class="cta-description">Download NearMe now and start discovering amazing local businesses and services!</p>
+            <a href="#" class="cta-button">Get Started</a>
+        </div> -->
+        <div class="cta-section">
+            <h2 class="cta-title">Ready to Explore?</h2>
+            <p class="cta-description">Download NearMe now and start discovering amazing local businesses and services!</p>
+            <a href="https://play.google.com/store/apps/details?id=com.front.nearme" class="cta-button">Get Started</a>
+        </div>
+        
+    </div>
+</body>
+</html>

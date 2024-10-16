@@ -94,19 +94,12 @@ def contact():
     
     return render_template('contact.html')
 
-@app.route('/ourservices', methods=['GET'])
-def ourservices():
-    
-    return render_template('ourservices.html')
 
 
 
-
-
-
-@app.route('/features')
+@app.route('/services')
 def features():
-    return render_template('test.html')
+    return render_template('services.html')
 
 @app.route('/download')
 def download():
@@ -1244,11 +1237,11 @@ def business_categories():
 def execute_query(query, params=None):
     print("called execute_query")
     db_config = {
-        'host': 'database-1.cf8i022mk2yx.us-east-1.rds.amazonaws.com',
+        'host': 'database-1-instance-1.c7iqok4sw8cg.ap-south-1.rds.amazonaws.com',
         'port': '5432',
         'database': 'postgres',
         'user': 'postgres',
-        'password': 'ZhLU2T5NdIhq5J6Rzrr9'
+        'password': 'Nearme1137'
     }
     try:
         print("try")
@@ -1467,24 +1460,109 @@ def house_data():
 # ////////////////////////// testing above methpost method to upload image as well ////////////////
 
 # Endpoint to retrieve filter data by passing params
+# @app.route('/pg/business/where', methods=['GET'])
+# def get_category():
+#     try:
+#         base_query = "SELECT * FROM business WHERE"
+#         filters = request.args
+#         print(f"filters {filters.values()}") #ImmutableMultiDict([('category', 'food')])
+#         where_clause = " AND ".join([f"{key} = %s" for key in filters.keys()]) # category = %s
+#         print(f"where_clause {where_clause}")
+#         full_query = f"{base_query} {where_clause};" if where_clause else f"{base_query} {full_query}"
+#         result = execute_query(full_query, tuple(filters.values()))
+
+
+#         # query = "SELECT * FROM business WHERE category = '{}';".format(category)
+#         # result = execute_query(query)
+#         return jsonify(result)
+
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
+    
+# @app.route('/pg/business/where', methods=['GET'])
+# def get_category():
+#     try:
+#         # Base query to select business details along with average rating and total reviews
+#         base_query = """
+#         SELECT b.*, 
+#                COALESCE(AVG(c.rating), 0) AS avg_rating, 
+#                COALESCE(COUNT(c.rating), 0) AS total_reviews
+#         FROM business b
+#         LEFT JOIN comments c ON b.business_uid = c.business_id
+#         WHERE
+#         """
+
+#         # Get filters from query parameters
+#         filters = request.args
+#         # print(f"filters {filters.values()}")  # ImmutableMultiDict([('category', 'food')])
+
+#         # Create WHERE clause based on the filters provided
+#         where_clause = " AND ".join([f"b.{key} = %s" for key in filters.keys()])
+#         # print(f"where_clause {where_clause}")
+
+#         # Complete the full query
+#         full_query = f"{base_query} {where_clause} GROUP BY b.business_uid;" if where_clause else f"{base_query[:-6]} GROUP BY b.business_uid;"
+
+#         # Execute the query with the filters as parameters
+#         result = execute_query(full_query, tuple(filters.values()))
+
+#         return jsonify(result)
+
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
+
+
+# http://127.0.0.1:5000/pg/business/where?is_premium=True&category=Food&length=3&sortby=avg_rating
+
 @app.route('/pg/business/where', methods=['GET'])
 def get_category():
     try:
-        base_query = "SELECT * FROM business WHERE"
-        filters = request.args
-        print(f"filters {filters.values()}") #ImmutableMultiDict([('category', 'food')])
-        where_clause = " AND ".join([f"{key} = %s" for key in filters.keys()]) # category = %s
-        print(f"where_clause {where_clause}")
-        full_query = f"{base_query} {where_clause};" if where_clause else f"{base_query} {full_query}"
-        result = execute_query(full_query, tuple(filters.values()))
+        # Base query to select business details along with average rating and total reviews
+        base_query = """
+        SELECT b.*, 
+               COALESCE(AVG(c.rating), 0) AS avg_rating, 
+               COALESCE(COUNT(c.rating), 0) AS total_reviews
+        FROM business b
+        LEFT JOIN comments c ON b.business_uid = c.business_id
+        WHERE
+        """
 
+        # Get filters from query parameters
+        filters = request.args.to_dict()
 
-        # query = "SELECT * FROM business WHERE category = '{}';".format(category)
-        # result = execute_query(query)
+        # Create WHERE clause based on the filters provided
+        where_clause = " AND ".join([f"b.{key} = %s" for key in filters.keys() if key not in ['length', 'sortby']])
+
+        # Complete the full query
+        full_query = f"{base_query} {where_clause} GROUP BY b.business_uid" if where_clause else f"{base_query[:-6]} GROUP BY b.business_uid"
+
+        # Apply dynamic sorting
+        sortby = filters.get('sortby')
+        if sortby in ['avg_rating', 'total_reviews', 'date_column']:
+            full_query += f" ORDER BY {sortby} DESC"
+
+        # Initialize params with filter values
+        params = tuple(filters[key] for key in filters.keys() if key not in ['length', 'sortby'])
+
+        # Append limit clause if length is specified
+        length = filters.get('length')
+        if length:
+            try:
+                length = int(length)
+                full_query += " LIMIT %s"
+                params += (length,)
+            except ValueError:
+                return jsonify({'error': 'Length must be a valid integer'}), 400
+
+        # Execute the query with the filters as parameters
+        result = execute_query(full_query, params)
+
         return jsonify(result)
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
     
 
 # # Endpoint to retrieve filter data by passing params for comments
@@ -1609,14 +1687,14 @@ def manage_comments():
         return jsonify({'error': str(e)}), 500
     
 
-@app.route('/comments/where/test', methods=['GET'])
-def manage_comments_test():
-    try:
-        base_query = "SELECT * FROM comments"
-        filters = request.args
-        where_clause = " AND ".join([f"{key} = %s" for key in filters.keys()])
-        full_query = f"{base_query} WHERE {where_clause};" if where_clause else base_query
-        comments = execute_query(full_query, tuple(filters.values()))
+# @app.route('/favourite/where', methods=['GET'])
+# def manage_favourite():
+#     try:
+#         base_query = "SELECT * FROM favourite"
+#         filters = request.args
+#         where_clause = " AND ".join([f"{key} = %s" for key in filters.keys()])
+#         full_query = f"{base_query} WHERE {where_clause};" if where_clause else base_query
+#         comments = execute_query(full_query, tuple(filters.values()))
 
         # Extract user_ids and business_ids from comments
         user_ids = {comment['user_id'] for comment in comments}
@@ -1635,23 +1713,177 @@ def manage_comments_test():
             user_id = comment['user_id']
             business_id = comment['business_id']
 
-            # Get user details
-            user_info = user_data.get(user_id)
-            if user_info:
-                comment['user_name'] = user_info.get('name', 'Unknown')
-                comment['profile_image_url'] = user_info.get('profile_image_url', None)
-            else:
-                comment['user_name'] = 'Unknown'
-                comment['profile_image_url'] = None
+#             # Get user details
+#             user_info = user_data.get(user_id)
+#             if user_info:
+#                 comment['user_name'] = user_info.get('name', 'Unknown')
+#                 comment['profile_image_url'] = user_info.get('profile_image_url', None)
+#             else:
+#                 comment['user_name'] = 'Unknown'
+#                 comment['profile_image_url'] = None
 
             # Get business details
             comment['business_name'] = business_dict.get(business_id, 'Unknown')
 
             comments_with_user_details.append(comment)
 
-        return jsonify(comments_with_user_details)
-    except:
+#         return jsonify(comments_with_user_details)
+#     except:
+#         return jsonify({'error': str(e)}), 500
+
+@app.route('/favourite/where', methods=['GET', 'POST', 'DELETE'])
+def manage_favourite():
+    try:
+        if request.method == 'GET':
+            base_query = "SELECT * FROM favourite"
+            filters = request.args
+            where_clause = " AND ".join([f"{key} = %s" for key in filters.keys()])
+            full_query = f"{base_query} WHERE {where_clause};" if where_clause else base_query
+            favourites = execute_query(full_query, tuple(filters.values()))
+
+            # Extract user_ids and business_ids from favourites
+            user_ids = {favourite['user_id'] for favourite in favourites}
+            business_ids = {favourite['business_id'] for favourite in favourites}
+
+            # Fetch all user details in one go from MongoDB
+            user_data = {user['userid']: user for user in user_collection.find({"userid": {"$in": list(user_ids)}})}
+
+            # Fetch all business details (including profile_image_url) in one go from PostgreSQL
+            business_query = "SELECT business_uid, business_name, profile_image_url, sub_category FROM business WHERE business_uid = ANY(%s)"
+            business_data = execute_query(business_query, (list(business_ids),))
+            business_dict = {
+                business['business_uid']: {
+                    'business_name': business['business_name'],
+                    'profile_image_url': business['profile_image_url'],
+                    'sub_category': business['sub_category']
+                } for business in business_data
+            }
+
+            favourites_with_details = []
+            for favourite in favourites:
+                user_id = favourite['user_id']
+                business_id = favourite['business_id']
+
+                # Get user details
+                user_info = user_data.get(user_id)
+                if user_info:
+                    favourite['user_name'] = user_info.get('name', 'Unknown')
+                    # If you want to include the user's profile_image_url from MongoDB, uncomment the line below
+                    # favourite['user_profile_image_url'] = user_info.get('profile_image_url', None)
+                else:
+                    favourite['user_name'] = 'Unknown'
+                    # favourite['user_profile_image_url'] = None
+
+                # Get business details including profile_image_url
+                business_info = business_dict.get(business_id, {})
+                favourite['business_name'] = business_info.get('business_name', 'Unknown')
+                favourite['business_profile_image_url'] = business_info.get('profile_image_url', None)
+                favourite['sub_category'] = business_info.get('sub_category', None)
+
+                favourites_with_details.append(favourite)
+
+            return jsonify(favourites_with_details)
+        elif request.method == 'POST':
+            data = request.form.to_dict()
+            user_id = data.get('user_id')
+            business_id = data.get('business_id')
+            print(user_id)
+            print(business_id)
+
+            if not user_id or not business_id:
+                return jsonify({'error': 'user_id and business_id are required'}), 400
+
+            # Check if the favorite already exists
+            check_query = "SELECT * FROM favourite WHERE user_id = %s AND business_id = %s"
+            existing_favourite = execute_query(check_query, (user_id, business_id))
+
+            if existing_favourite:
+                return jsonify({'error': 'This business is already in the user\'s favorites'}), 400
+
+            # Insert the new favorite
+            insert_query = "INSERT INTO favourite (user_id, business_id) VALUES (%s, %s)"
+            execute_query(insert_query, (user_id, business_id))
+
+            return jsonify({'message': 'Business added to favorites successfully'}), 201
+        
+        elif request.method == 'DELETE':
+            favourite_id = request.args.get('favourite_id')
+
+            if not favourite_id:
+                return jsonify({'error': 'favourite_id is required'}), 400
+
+            # Check if the favorite exists
+            check_query = "SELECT * FROM favourite WHERE favourite_id = %s"
+            existing_favourite = execute_query(check_query, (favourite_id,))
+
+            if not existing_favourite:
+                return jsonify({'error': 'This favourite_id is not in the user\'s favorites'}), 404
+
+            # Delete the favorite
+            delete_query = "DELETE FROM favourite WHERE favourite_id = %s"
+            execute_query(delete_query, (favourite_id,))
+            return jsonify({'message': 'favourite_id removed from favorites successfully'}), 200
+
+
+    except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+# @app.route('/favourite/post', methods=['POST'])
+# def add_favourite():
+#     try:
+#         print("yes im here")
+#         data = request.form.to_dict()
+#         # business_uid = data.get("business_id")
+#         # data = request.get_json()
+#         user_id = data.get('user_id')
+#         business_id = data.get('business_id')
+#         print(user_id)
+#         print(business_id)
+
+#         if not user_id or not business_id:
+#             return jsonify({'error': 'user_id and business_id are required'}), 400
+
+#         # Check if the favorite already exists
+#         check_query = "SELECT * FROM favourite WHERE user_id = %s AND business_id = %s"
+#         existing_favourite = execute_query(check_query, (user_id, business_id))
+
+#         if existing_favourite:
+#             return jsonify({'error': 'This business is already in the user\'s favorites'}), 400
+
+#         # Insert the new favorite
+#         insert_query = "INSERT INTO favourite (user_id, business_id) VALUES (%s, %s)"
+#         execute_query(insert_query, (user_id, business_id))
+
+#         return jsonify({'message': 'Business added to favorites successfully'}), 201
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
+    
+# @app.route('/favourite/delete', methods=['DELETE'])
+# def delete_favourite():
+#     try:
+#         # data = request.form.to_dict()
+#         favourite_id = request.args.get('favourite_id')
+#         # user_id = data.get('user_id')
+#         # business_id = data.get('business_id')
+
+#         if not favourite_id:
+#             return jsonify({'error': 'favourite_id is required'}), 400
+
+#         # Check if the favorite exists
+#         check_query = "SELECT * FROM favourite WHERE favourite_id = %s"
+#         existing_favourite = execute_query(check_query, (favourite_id))
+
+#         if not existing_favourite:
+#             return jsonify({'error': 'This favourite_id is not in the user\'s favorites'}), 404
+
+#         # Delete the favorite
+#         delete_query = "DELETE FROM favourite WHERE favourite_id = %s"
+#         execute_query(delete_query, (favourite_id))
+
+#         return jsonify({'message': 'favourite_id removed from favorites successfully'}), 200
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
+
 
 
 
@@ -1724,6 +1956,130 @@ def get_house_data():
 # get data based on lat and lang
 
     
+# @app.route('/pg/business/latlong', methods=['GET'])
+# def businessforlatlong():
+#     # Check if required parameters are provided
+#     latitude = request.args.get('latitude')
+#     longitude = request.args.get('longitude')
+#     distance = request.args.get('distance')
+#     key = request.args.get('key')
+#     value = request.args.get('value')
+#     print(latitude)
+#     print(longitude)
+#     print(distance)
+#     print(key)
+#     print(value)
+
+#     # Validate that latitude and longitude are provided and are floats
+#     if not latitude or not longitude:
+#         return jsonify({'error': 'Latitude and longitude parameters are required'}), 400
+#     try:
+#         latitude = float(latitude)
+#         longitude = float(longitude)
+#     except ValueError:
+#         return jsonify({'error': 'Latitude and longitude must be valid numbers'}), 400
+
+#     # Validate that distance is provided and is a positive number
+#     if not distance:
+#         return jsonify({'error': 'Distance parameter is required'}), 400
+#     try:
+#         distance = float(distance)
+#         if distance <= 0:
+#             return jsonify({'error': 'Distance must be a positive number'}), 400
+#     except ValueError:
+#         return jsonify({'error': 'Distance must be a valid number'}), 400
+
+#     # Construct the SQL query
+#     query = """
+#     SELECT *
+#     FROM business
+#     WHERE ST_DWithin(
+#         ST_GeographyFromText('POINT(%s %s)'),
+#         geography(ST_MakePoint(business.latitude, business.longitude)),
+#         %s
+#     )
+#     """
+
+#     if key and value:
+#         query += f"AND business.{key} = %s"
+
+#     # Execute the query
+#     try:
+#         result = execute_query(query, (latitude, longitude, distance, value) if key and value else (latitude, longitude, distance))
+#     except Exception as e:
+#         return jsonify({'error': f'Database error: {str(e)}'}), 500
+
+#     # Check if any businesses were found
+#     if not result:
+#         return jsonify({'message': 'No businesses found within the specified distance'}), 404
+
+#     # Return the results
+#     return jsonify(result)
+
+
+# this is the new api for the above one, 
+
+# @app.route('/pg/business/latlong', methods=['GET'])
+# def businessforlatlong():
+#     # Check if required parameters are provided
+#     latitude = request.args.get('latitude')
+#     longitude = request.args.get('longitude')
+#     distance = request.args.get('distance')
+#     key = request.args.get('key')
+#     value = request.args.get('value')
+
+#     # Validate that latitude and longitude are provided and are floats
+#     if not latitude or not longitude:
+#         return jsonify({'error': 'Latitude and longitude parameters are required'}), 400
+#     try:
+#         latitude = float(latitude)
+#         longitude = float(longitude)
+#     except ValueError:
+#         return jsonify({'error': 'Latitude and longitude must be valid numbers'}), 400
+
+#     # Validate that distance is provided and is a positive number
+#     if not distance:
+#         return jsonify({'error': 'Distance parameter is required'}), 400
+#     try:
+#         distance = float(distance)
+#         if distance <= 0:
+#             return jsonify({'error': 'Distance must be a positive number'}), 400
+#     except ValueError:
+#         return jsonify({'error': 'Distance must be a valid number'}), 400
+
+#     # Construct the SQL query
+#     query = """
+#     SELECT b.*, 
+#            COALESCE(AVG(c.rating), 0) AS avg_rating, 
+#            COALESCE(COUNT(c.rating), 0) AS total_reviews
+#     FROM business b
+#     LEFT JOIN comments c ON b.business_uid = c.business_id
+#     WHERE ST_DWithin(
+#         ST_GeographyFromText('POINT(%s %s)'),
+#         geography(ST_MakePoint(b.latitude, b.longitude)),
+#         %s
+#     )
+#     """
+
+#     if key and value:
+#         query += f"AND b.{key} = %s"
+
+#     query += " GROUP BY b.business_uid"
+
+#     # Execute the query
+#     try:
+#         result = execute_query(query, (latitude, longitude, distance, value) if key and value else (latitude, longitude, distance))
+#     except Exception as e:
+#         return jsonify({'error': f'Database error: {str(e)}'}), 500
+
+#     # Check if any businesses were found
+#     if not result:
+#         return jsonify({'message': 'No businesses found within the specified distance'}), 404
+
+#     # Return the results
+#     return jsonify(result)
+
+
 @app.route('/pg/business/latlong', methods=['GET'])
 def businessforlatlong():
     # Check if required parameters are provided
@@ -1732,11 +2088,8 @@ def businessforlatlong():
     distance = request.args.get('distance')
     key = request.args.get('key')
     value = request.args.get('value')
-    print(latitude)
-    print(longitude)
-    print(distance)
-    print(key)
-    print(value)
+    length = request.args.get('length')
+    sortby = request.args.get('sortby')
 
     # Validate that latitude and longitude are provided and are floats
     if not latitude or not longitude:
@@ -1759,21 +2112,41 @@ def businessforlatlong():
 
     # Construct the SQL query
     query = """
-    SELECT *
-    FROM business
+    SELECT b.*, 
+           COALESCE(AVG(c.rating), 0) AS avg_rating, 
+           COALESCE(COUNT(c.rating), 0) AS total_reviews
+    FROM business b
+    LEFT JOIN comments c ON b.business_uid = c.business_id
     WHERE ST_DWithin(
         ST_GeographyFromText('POINT(%s %s)'),
-        geography(ST_MakePoint(business.latitude, business.longitude)),
+        geography(ST_MakePoint(b.latitude, b.longitude)),
         %s
     )
     """
 
     if key and value:
-        query += f"AND business.{key} = %s"
+        query += f"AND b.{key} = %s "
+
+    query += "GROUP BY b.business_uid"
+
+    # Apply dynamic sorting
+    if sortby in ['avg_rating', 'total_reviews', 'date_column']:
+        query += f" ORDER BY {sortby} DESC"
+
+    # Append limit clause if length is specified
+    if length:
+        try:
+            length = int(length)
+            query += " LIMIT %s"
+            params = (latitude, longitude, distance, value, length) if key and value else (latitude, longitude, distance, length)
+        except ValueError:
+            return jsonify({'error': 'Length must be a valid integer'}), 400
+    else:
+        params = (latitude, longitude, distance, value) if key and value else (latitude, longitude, distance)
 
     # Execute the query
     try:
-        result = execute_query(query, (latitude, longitude, distance, value) if key and value else (latitude, longitude, distance))
+        result = execute_query(query, params)
     except Exception as e:
         return jsonify({'error': f'Database error: {str(e)}'}), 500
 
@@ -1783,6 +2156,7 @@ def businessforlatlong():
 
     # Return the results
     return jsonify(result)
+
 
 
 @app.route('/pg/comments/latlong', methods=['GET'])
