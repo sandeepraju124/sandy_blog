@@ -1609,50 +1609,49 @@ def manage_comments():
         return jsonify({'error': str(e)}), 500
     
 
-# @app.route('/comments/where/test', methods=['GET'])
-# def manage_comments_test():
-#     try:
-#         base_query = "SELECT * FROM comments"
-#         filters = request.args
-#         where_clause = " AND ".join([f"{key} = %s" for key in filters.keys()])
-#         full_query = f"{base_query} WHERE {where_clause};" if where_clause else base_query
-#         comments = execute_query(full_query, tuple(filters.values()))
+@app.route('/comments/where/test', methods=['GET'])
+def manage_comments_test():
+    try:
+        base_query = "SELECT * FROM comments"
+        filters = request.args
+        where_clause = " AND ".join([f"{key} = %s" for key in filters.keys()])
+        full_query = f"{base_query} WHERE {where_clause};" if where_clause else base_query
+        comments = execute_query(full_query, tuple(filters.values()))
 
-#         # Extract user_ids and business_ids from comments
-#         user_ids = {comment['user_id'] for comment in comments}
-#         business_ids = {comment['business_id'] for comment in comments}
+        # Extract user_ids and business_ids from comments
+        user_ids = {comment['user_id'] for comment in comments}
+        business_ids = {comment['business_id'] for comment in comments}
 
-#         # Fetch all user details in one go from MongoDB
-#         user_data = {user['userid']: user for user in user_collection.find({"userid": {"$in": list(user_ids)}})}
+        # Fetch all user details in one go from MongoDB
+        user_data = {user['userid']: user for user in user_collection.find({"userid": {"$in": list(user_ids)}})}
 
-#         # Fetch all business details in one go from PostgreSQL
-#         business_query = "SELECT business_uid, business_name FROM business WHERE business_uid = ANY(%s)"
-#         business_data = execute_query(business_query, (list(business_ids),))
-#         business_dict = {business['business_uid']: business['business_name'] for business in business_data}
+        # Fetch all business details in one go from PostgreSQL
+        business_query = "SELECT business_uid, business_name FROM business WHERE business_uid = ANY(%s)"
+        business_data = execute_query(business_query, (list(business_ids),))
+        business_dict = {business['business_uid']: business['business_name'] for business in business_data}
 
-#         comments_with_user_details = []
-#         for comment in comments:
-#             user_id = comment['user_id']
-#             business_id = comment['business_id']
+        comments_with_user_details = []
+        for comment in comments:
+            user_id = comment['user_id']
+            business_id = comment['business_id']
 
-#             # Get user details
-#             user_info = user_data.get(user_id)
-#             if user_info:
-#                 comment['user_name'] = user_info.get('name', 'Unknown')
-#                 comment['profile_image_url'] = user_info.get('profile_image_url', None)
-#             else:
-#                 comment['user_name'] = 'Unknown'
-#                 comment['profile_image_url'] = None
+            # Get user details
+            user_info = user_data.get(user_id)
+            if user_info:
+                comment['user_name'] = user_info.get('name', 'Unknown')
+                comment['profile_image_url'] = user_info.get('profile_image_url', None)
+            else:
+                comment['user_name'] = 'Unknown'
+                comment['profile_image_url'] = None
 
-#             # Get business details
-#             comment['business_name'] = business_dict.get(business_id, 'Unknown')
+            # Get business details
+            comment['business_name'] = business_dict.get(business_id, 'Unknown')
 
-#             comments_with_user_details.append(comment)
+            comments_with_user_details.append(comment)
 
-#         return jsonify(comments_with_user_details)
-#     except:
-#         return jsonify({'error': str(e)}), 500
-
+        return jsonify(comments_with_user_details)
+    except:
+        return jsonify({'error': str(e)}), 500
 
 
 
@@ -2061,3 +2060,7 @@ def fullsearch_business():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+
+
+# "We might be closing this chapter, but the story doesn’t end here. Each challenge has prepared us for bigger and better things. Onward and upward."
